@@ -14,7 +14,7 @@ from spectrum_interpolation import interpolate_freq
 
 # Reading raw data
 raw_path: str = '/Users/yukifujishima/example/example_raw_tsss.fif'
-raw: Raw = read_raw_fif(raw_path, preload=True)
+raw: Raw = read_raw_fif(raw_path, preload=True).filter(1, 98)
 
 # Making epochs
 events: ndarray = find_events(raw)
@@ -33,8 +33,8 @@ epoarray_interpolated: ndarray = interpolate_freq(epoarray,
                                                   sample_rate=1000,
                                                   noise_freq=50,
                                                   ch_names=ch_names,
-                                                  plot_pw_before=True,
-                                                  plot_pw_after=True)
+                                                  plot_pw_before=False,
+                                                  plot_pw_after=False)
 
 # Create a new Epochs instance.
 new_epoarray: ndarray = np.concatenate((epoarray_interpolated, other_channels),
