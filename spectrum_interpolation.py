@@ -190,13 +190,6 @@ def trim_axs(axs, N):
         ax.remove()
     return axs[:N]
 
-"""
-def make_chdict(ch_names: List[str]) -> dict:
-    chndict: dict = {}
-    for pos, i in enumerate(ch_names):
-        chndict[pos] = i
-    return chndict
-"""
 
 def interpolate_freq(array: ndarray, sample_rate: float,
                      noise_freq: float, ch_names=None,
