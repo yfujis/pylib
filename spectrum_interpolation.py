@@ -146,7 +146,7 @@ class EpoSpec:
         ft_interpolated: ndarray = ft
 
         # Multiply signal in frequency domain with square root of c.
-        # Do the same to the other mirred signal.
+        # Do the same to the other mirred half of the signal.
         ft_interpolated[:, :, idx-2:idx+3] = ft[:, :, idx-2:idx+3] * np.sqrt(c)
         ft_interpolated[:, :, -(idx+2):-(idx-3)] = ft[:, :, -(idx+2):-(idx-3)] * np.sqrt(np.flip(c, axis=2))
         return ft_interpolated
