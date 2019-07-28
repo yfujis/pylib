@@ -5,4 +5,4 @@ Leske, S., & Dalal, S. S. (2019). Reducing power line noise in EEG and MEG data 
 
 Spectrum_interpolation.py is the module file. Please check example_interpolation.py to see the example of use.
 
-Message me or shoort me an email if you have any questions or tips for improvement.
+Message me or shoort me an email (yfujishima1001@gmail.com) if you have any questions or tips for improvement.
