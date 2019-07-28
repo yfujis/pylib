@@ -247,7 +247,8 @@ def interpolate_freq(array: ndarray, sample_rate: float,
                                                          ft=ft)
     # Compute inverse fast fourier transform using numpy.fft.ifft
     # Transform the singal back into time domain.
-    inverse_fourier: ndarray = ifft(ft_interpolated)
+    inverse_fourier: ndarray = ifft(ft_interpolated).real
+    print(inverse_fourier)
 
     # Plot total power.
     if plot_pw_before is True:
