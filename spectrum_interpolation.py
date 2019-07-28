@@ -138,10 +138,15 @@ class EpoSpec:
                                       energy[:, :, idx-2:idx+3].shape[2],
                                       axis=2)
 
-        # Compute the ratio between the mean energy of neighoring frequencies
-        # and the energy of each to-be-interpolated frequencies,
+        # Compute the ratio(c) between the mean energy of neighoring
+        # frequencies and the energy of each to-be-interpolated frequencies,
         c: ndarray = neighbor_mean_ene / energy[:, :, idx-2:idx+3]
+
+        # Copy ft
         ft_interpolated: ndarray = ft
+
+        # Multiply signal in frequency domain with square root of c.
+        # Do the same to the other mirred signal.
         ft_interpolated[:, :, idx-2:idx+3] = ft[:, :, idx-2:idx+3] * np.sqrt(c)
         ft_interpolated[:, :, -(idx+2):-(idx-3)] = ft[:, :, -(idx+2):-(idx-3)] * np.sqrt(np.flip(c, axis=2))
         return ft_interpolated
@@ -185,6 +190,8 @@ def compute_total_power(energy: ndarray) -> ndarray:
 
 
 def trim_axs(axs, N):
+    """Massage the axs list to have correct legnth.
+    """
     axs = axs.flat
     for ax in axs[N:]:
         ax.remove()
@@ -221,7 +228,7 @@ def interpolate_freq(array: ndarray, sample_rate: float,
         the signal in time domain after the interpolation.
     See Also
     --------
-    Pleae refer to documentations of each function for the details.
+    Pleae refer to the docstring of each function for the details.
     """
     # Zero meaning the epoch array
     epospec = EpoSpec(array=array, sample_rate=sample_rate).zero_mean()
