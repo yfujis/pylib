@@ -31,7 +31,7 @@ class EpoSpec:
 
     """
 
-    def __init__(self, array: ndarray, sample_rate: int):
+    def __init__(self, array: ndarray, sample_rate: float):
         self.array: ndarray = array
         self.n_trials: int = array.shape[0]  # Number of trials
         self.n_chn: int = array.shape[1]  # Number of channels
@@ -72,8 +72,9 @@ class EpoSpec:
         else:
             channels: List[int] = list(range(self.n_chn))
         for i in range(self.n_chn):
+            print(self.freq.shape, specarray.shape)
             axs[i].set_title(channels[i])
-            axs[i].plot(self.freq[1:70], np.log(specarray[i][1:70]))
+            axs[i].plot(self.freq[1:], np.log(specarray[i][1:641]))
             axs[i].axvline(self.freq[self.idx-2], color='red')
             axs[i].axvline(self.freq[self.idx+3], color='red')
             axs[i].axvline(self.freq[self.idx-5], color='red')
@@ -83,7 +84,7 @@ class EpoSpec:
             fig.savefig(save_path)
         return self
 
-    def _interpolate_freq(self, noise_freq: int,
+    def _interpolate_freq(self, noise_freq: float,
                           energy: ndarray, ft: ndarray) -> ndarray:
         """Make the power of the frequency of noise the same as that of neighbors,
            while keeping the phase information as they are.
@@ -116,7 +117,7 @@ class EpoSpec:
         rate and the length of the signal.
         """
         print('Interpolating {}Hz'.format(noise_freq))
-        idx: float = (np.abs(self.freq - noise_freq)).argmin()
+        idx: int = (np.abs(self.freq - noise_freq)).argmin()
         self.idx = idx
         print('Computing the mean power of neighboring frequencies:')
         print('\t{}-{}Hz, {}-{}Hz'.format(self.freq[idx-5],
@@ -248,13 +249,12 @@ def interpolate_freq(array: ndarray, sample_rate: float,
     # Compute inverse fast fourier transform using numpy.fft.ifft
     # Transform the singal back into time domain.
     inverse_fourier: ndarray = ifft(ft_interpolated).real
-    print(inverse_fourier)
 
     # Plot total power.
     if plot_pw_before is True:
         power: ndarray = compute_total_power(energy=energy)
         pw_suptile: str = 'Power Spectrum'
-        pw_path: str = '/Users/yukifujishima/example/power_before_intpl.jpg'
+        pw_path: str = '/Users/yukifujishima/Documents/2CSRTnew/power_before_intpl.jpg'
         epospec.plot_freq_domain(power,
                                  suptitle=pw_suptile,
                                  ch_names=ch_names,
@@ -264,7 +264,7 @@ def interpolate_freq(array: ndarray, sample_rate: float,
         power_interpolated: ndarray = compute_total_power(energy_interpolated)
 
         pw2_suptile = 'Power Spectrum ({}Hz interpolated)'.format(noise_freq)
-        pw2_path: str = '/Users/yukifujishima/example/power_after_intpl.jpg'
+        pw2_path: str = '/Users/yukifujishima/Documents/2CSRTnew/power_after_intpl.jpg'
 
         epospec.plot_freq_domain(power_interpolated,
                                  suptitle=pw2_suptile,
