@@ -74,7 +74,7 @@ class EpoSpec:
         for i in range(self.n_chn):
             print(self.freq.shape, specarray.shape)
             axs[i].set_title(channels[i])
-            axs[i].plot(self.freq[1:], np.log(specarray[i][1:641]))
+            axs[i].plot(self.freq[1:70], np.log10(specarray[i][1:70]))
             axs[i].axvline(self.freq[self.idx-2], color='red')
             axs[i].axvline(self.freq[self.idx+3], color='red')
             axs[i].axvline(self.freq[self.idx-5], color='red')
@@ -84,7 +84,7 @@ class EpoSpec:
             fig.savefig(save_path)
         return self
 
-    def _interpolate_freq(self, noise_freq: float,
+    def interpolate_freq(self, noise_freq: float,
                           energy: ndarray, ft: ndarray) -> ndarray:
         """Make the power of the frequency of noise the same as that of neighbors,
            while keeping the phase information as they are.
@@ -199,9 +199,9 @@ def trim_axs(axs, N):
     return axs[:N]
 
 
-def interpolate_freq(array: ndarray, sample_rate: float,
-                     noise_freq: float, ch_names=None,
-                     plot_pw_before=False, plot_pw_after=False) -> ndarray:
+def spectrum_interpolation(array: ndarray, sample_rate: float,
+                           noise_freq: float, ch_names=None,
+                           plot_pw_before=False, plot_pw_after=False) -> ndarray:
     """Interpolate the frequency of noise.
 
     Parameters
@@ -243,9 +243,9 @@ def interpolate_freq(array: ndarray, sample_rate: float,
 
     # Interpolate the frequencies of noise
     # Please refer to EpoSpec._interpolate_freq for more information.
-    ft_interpolated: ndarray = epospec._interpolate_freq(noise_freq=noise_freq,
-                                                         energy=energy,
-                                                         ft=ft)
+    ft_interpolated: ndarray = epospec.interpolate_freq(noise_freq=noise_freq,
+                                                        energy=energy,
+                                                        ft=ft)
     # Compute inverse fast fourier transform using numpy.fft.ifft
     # Transform the singal back into time domain.
     inverse_fourier: ndarray = ifft(ft_interpolated).real

@@ -33,8 +33,8 @@ epoarray_interpolated: ndarray = interpolate_freq(epoarray,
                                                   sample_rate=1000,
                                                   noise_freq=50,
                                                   ch_names=ch_names,
-                                                  plot_pw_before=False,
-                                                  plot_pw_after=False)
+                                                  plot_pw_before=True,
+                                                  plot_pw_after=True)
 
 # Create a new Epochs instance.
 new_epoarray: ndarray = np.concatenate((epoarray_interpolated, other_channels),
