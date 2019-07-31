@@ -16,7 +16,7 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 
-def get_shape(array: ndarray) -> ndarray:
+def get_shape(array: ndarray[np.float]) -> ndarray[np.float]:
     """Get the shape of epoch array data.
 
     Parameters
@@ -39,16 +39,16 @@ def get_shape(array: ndarray) -> ndarray:
     return n_trials, n_chn, n_dpoints
 
 
-def zero_mean(array: ndarray) -> ndarray:
+def zero_mean(array: ndarray[np.float]) -> ndarray[np.float]:
     """Zero mean the epoch array.
     """
-    zeromean: ndarray = array - np.mean(array,
+    zeromean: ndarray[np.float] = array - np.mean(array,
                                                   axis=2,
                                                   keepdims=True)
     return zeromean
 
 
-def get_freq(n_dpoints: int, sample_rate: float) -> ndarray:
+def get_freq(n_dpoints: int, sample_rate: float) -> ndarray[float]:
     """Get the 1D array of frequency space.
 
     Parameters
@@ -70,7 +70,7 @@ def get_freq(n_dpoints: int, sample_rate: float) -> ndarray:
 
 
 
-def plot_freq_domain(freq: ndarray, specarray: ndarray,
+def plot_freq_domain(freq: ndarray[float], specarray: ndarray[np.complex128],
                      suptitle: str, ch_names=None, save_path=None) -> None:
     """Plot spectrum data of each sensor.
     Parameters
@@ -153,8 +153,8 @@ def trim_axs(axs, N):
     return axs[:N]
 
 
-def interpolate_freq(noise_freq: float, freq: ndarray, energy: ndarray,
-                     ft: ndarray) -> ndarray:
+def interpolate_freq(noise_freq: float, freq: ndarray[float], energy: ndarray[float],
+                     ft: ndarray[complex]) -> ndarray[complex]:
     """Make the power of the frequency of noise the same as that of neighbors,
        while keeping the phase information as they are.
 
@@ -204,63 +204,53 @@ def interpolate_freq(noise_freq: float, freq: ndarray, energy: ndarray,
     # Compute the mean of lower & higher neighboring frequencies.
     neighborene = (lowneighbor + highneighbor)*0.5
     neighborene = np.array(neighborene)
-    neighbor_mean_ene: ndarray = np.repeat(neighborene,
+    neighbor_mean_ene: ndarray[float] = np.repeat(neighborene,
                                                   energy[:, :, idx-2:idx+3].shape[2],
                                                   axis=2)
 
     # Compute the ratio(c) between the mean energy of neighoring
     # frequencies and the energy of each to-be-interpolated frequencies,
-    C: ndarray = neighbor_mean_ene / energy[:, :, idx-2:idx+3]
+    C: ndarray[float] = neighbor_mean_ene / energy[:, :, idx-2:idx+3]
 
     # Copy ft
-    ft_intplted: ndarray = ft
+    ft_intplted: ndarray[complex] = ft
 
-    ft_interpolated: ndarray = ft
+    ft_interpolated: ndarray[complex] = ft
     # Do the same to the other mirred half of the signal.
     ft_intplted[:, :, idx-2:idx+3] = ft[:, :, idx-2:idx+3] * np.sqrt(C)
     ft_intplted[:, :, -(idx+2):-(idx-3)] = ft[:, :, -(idx+2):-(idx-3)] * np.sqrt(np.flip(C, axis=2))
     return ft_intplted
 
 
-def get_idx(target_freq: float, freq: ndarray) -> int: 
-    return (np.abs(target - noise_freq)).argmin()
-
-def mean_ene_of_range(freq1: int, freq2: int, energy: ndarray) -> ndarray:
-    """Compute the mean energy of a frequency range (freq1:freq2)
-    """
-    return np.mean(energy[:, :, freq1:freq2], axis=2, keepdims=True)
+def get_idx(noise_freq: float, freq: ndarray[float]) -> int: 
+    return (np.abs(freq - noise_freq)).argmin()
 
 
-def compute_neighbor_mean_ene(noise_freq: float,
+
+def compute_neighbor_mean_ene(noise_idx: idx,
                               freq_width: float,
-                              freq: ndarray,
-                              energy: ndarray) -> ndarray:
+                              freq: ndarray[float]) -> ndarray[float]:
     print('Computing the mean power of neighboring frequencies:')
-    print('\t{}-{}Hz, {}-{}Hz'.format(freq[llidx],
-                                      freq[lidx],
-                                      freq[hidx],
-                                      freq[hhidx],))
 
-    hfreq: float = noise_freq + freq_width 
-    lfreq: float = noise_freq + freq_width 
-    hhfreq: float = noise_freq + 2*freq_width 
-    llfreq: float = noise_freq + 2*freq_width 
-
-    hidx: int = get_idx(hfreq, freq)
-    lidx: int = get_idx(lfreq, freq)
-    hhidx: int = get_idx(hhfreq, freq)
-    llidx: int = get_idx(llfreq, freq)
-
+    freq[idx]
+    print('\t{}-{}Hz, {}-{}Hz'.format(freq[idx-5],
+                                      freq[idx-2],
+                                      freq[idx+3],
+                                      freq[idx+6],))
     # Compute the mean energy of lower neighboring frequencies.
-    lfreq_ene: ndarray = mean_ene_of_range(llidx, lidx, energy)
+    lowneighbor: ndarray = np.mean(energy[:, :, idx-5:idx-2],
+                                   axis=2,
+                                   keepdims=True)
     # Compute the mean energy of higher neighboring frequencies.
-    hfreq_ene: ndarray = mean_ene_of_range(hidx, hhidx, energy)
+    highneighbor: ndarray = np.mean(energy[:, :, idx+3:idx+6],
+                                    axis=2,
+                                    keepdims=True)
     # Compute the mean of lower & higher neighboring frequencies.
-    neighborene = (lfreq_ene + hfreq_ene)*0.5
+    neighborene = (lowneighbor + highneighbor)*0.5
     neighborene = np.array(neighborene)
-#   return np.repeat(neighborene, energy[:, :, idx-2:idx+3].shape[2],
-#                                                 axis=2)
-    return np.repeat(neighborene, hidx - lidx, axis=2)
+    neighbor_mean_ene: ndarray[float] = np.repeat(neighborene,
+                                                  energy[:, :, idx-2:idx+3].shape[2],
+                                                  axis=2)
 
 
 
@@ -297,32 +287,32 @@ def spectrum_interpolation(array: ndarray, sample_rate: float,
     Pleae refer to the docstring of each function for the details.
     """
     # Zero meaning the epoch array
-    epoarray: ndarray = zero_mean(array)
+    epoarray: ndarray[float] = zero_mean(array)
 
     n_trials, n_chn, n_dpoints = get_shape(epoarray)
-    freq: ndarray = get_freq(n_dpoints=n_dpoints,
-                             sample_rate=sample_rate)
+    freq: ndarray[float] = get_freq(n_dpoints=n_dpoints,
+                                    sample_rate=sample_rate)
 
     # Compute fast fourier transform using numpy.fft.fft
     # Transform the singal into complex waves in frequency domain.
-    ft: ndarray = fft(epoarray)
+    ft: ndarray[complex] = fft(epoarray)
 
     # Compute energy of each trial, channel, and frequency
-    energy: ndarray = compute_energy(ft=ft)
+    energy: ndarray[float] = compute_energy(ft=ft)
 
     # Interpolate the frequencies of noise
     # Please refer to interpolate_freq for more information.
-    ft_interpolated: ndarray = interpolate_freq(noise_freq=noise_freq,
-                                                freq=freq,
-                                                energy=energy,
-                                                ft=ft)
+    ft_interpolated: ndarray[complex] = interpolate_freq(noise_freq=noise_freq,
+                                                         freq=freq,
+                                                         energy=energy,
+                                                         ft=ft)
     # Compute inverse fast fourier transform using numpy.fft.ifft
     # Transform the singal back into time domain.
-    inverse_fourier: ndarray = ifft(ft_interpolated).real
+    inverse_fourier: ndarray[float] = ifft(ft_interpolated).real
 
     # Plot total power.
     if plot_pw_before is True:
-        power: ndarray = compute_total_power(energy=energy)
+        power: ndarray[float] = compute_total_power(energy=energy)
         pw_suptile: str = 'Power Spectrum'
         pw_path: str = '/Users/yukifujishima/Documents/2CSRTnew/power_before_intpl.jpg'
         plot_freq_domain(freq,
