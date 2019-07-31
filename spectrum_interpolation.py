@@ -115,7 +115,7 @@ def trim_axs(axs, N):
     return axs[:N]
 
 
-def interpolate_freq(noise_freq: float, freq_width: ndarray, freq: ndarray,
+def interpolate_freq(noise_freq: float, band: ndarray, freq: ndarray,
                      energy: ndarray, ft: ndarray) -> ndarray:
     """Make the power of the frequency of noise the same as that of neighbors,
        while keeping the phase information as they are.
@@ -151,12 +151,12 @@ def interpolate_freq(noise_freq: float, freq_width: ndarray, freq: ndarray,
     print('Interpolating {}Hz'.format(noise_freq))
 
     neighbor_energy = compute_neighbor_mean_ene(noise_freq=noise_freq,
-                                                freq_width=freq_width,
+                                                band=band,
                                                 freq=freq,
                                                 energy=energy)
     # Compute the ratio between the mean energy of neighoring
     # frequencies and the energy of each to-be-interpolated frequencies,
-    lidx, hidx = get_neighbor_idxs(noise_freq, freq_width, freq, edge=False)
+    lidx, hidx = get_neighbor_idxs(noise_freq, band, freq, edge=False)
     energy_ratio: ndarray = neighbor_energy / energy[:, :, lidx:hidx]
 
     return modify_ft(energy_ratio=energy_ratio,
@@ -186,20 +186,20 @@ def get_idx(target_freq: float, freq: ndarray) -> int:
     return (np.abs(freq - target_freq)).argmin()
 
 
-def get_neighbor_idxs(noise_freq: float, freq_width: float, freq: ndarray,
+def get_neighbor_idxs(noise_freq: float, band: float, freq: ndarray,
                       edge=True):
     """Get the indexes of neighboring frequencies.
     """
     if edge is not True:
-        hfreq: float = noise_freq + freq_width
-        lfreq: float = noise_freq - freq_width
+        hfreq: float = noise_freq + band*0.5
+        lfreq: float = noise_freq - band*0.5
         hidx: int = get_idx(hfreq, freq)
         lidx: int = get_idx(lfreq, freq)
         return lidx, hidx
-    hfreq: float = noise_freq + freq_width
-    lfreq: float = noise_freq - freq_width
-    hhfreq: float = noise_freq + 2*freq_width
-    llfreq: float = noise_freq - 2*freq_width
+    hfreq: float = noise_freq + band*0.5
+    lfreq: float = noise_freq - band*0.5
+    hhfreq: float = hfreq + band
+    llfreq: float = lfreq - band
 
     hidx: int = get_idx(hfreq, freq)
     lidx: int = get_idx(lfreq, freq)
@@ -215,13 +215,13 @@ def mean_ene_of_range(freq1: int, freq2: int, energy: ndarray) -> ndarray:
 
 
 def compute_neighbor_mean_ene(noise_freq: float,
-                              freq_width: float,
+                              band: float,
                               freq: ndarray,
                               energy: ndarray) -> ndarray:
     """Compute the mean energy of neighboring frequencies.
     """
 
-    llidx, lidx, hidx, hhidx = get_neighbor_idxs(noise_freq, freq_width, freq)
+    llidx, lidx, hidx, hhidx = get_neighbor_idxs(noise_freq, band, freq)
 
     print('Computing the mean power of neighboring frequencies:')
     print('\t{}-{}Hz, {}-{}Hz'.format(freq[llidx],
@@ -242,7 +242,7 @@ def compute_neighbor_mean_ene(noise_freq: float,
 
 
 def spectrum_interpolation(array: ndarray, sample_rate: float,
-                           noise_freq: float, freq_width: float) -> ndarray:
+                           noise_freq: float, band: float) -> ndarray:
     """Interpolate the frequency of noise.
 
     Parameters
@@ -286,21 +286,30 @@ def spectrum_interpolation(array: ndarray, sample_rate: float,
 
     # Compute energy of each trial, channel, and frequency
     energy: ndarray = compute_energy(ft)
-
+    power: ndarray = compute_total_power(ft)
     # Interpolate the frequencies of noise
     # Please refer to interpolate_freq for more information.
     ft_interpolated: ndarray = interpolate_freq(noise_freq=noise_freq,
-                                                freq_width=freq_width,
+                                                band=band,
                                                 freq=freq,
                                                 energy=energy,
                                                 ft=ft)
+    pw_interpolated: ndarray = compute_total_power(ft_interpolated)
+    plot_freq_domain(power, epoarray, sample_rate,
+                     noise_freq, band,
+                     suptitle='/Users/yukifujishima/Documents/2CSRTnew/before.jpg',
+                     save_path='/Users/yukifujishima/Documents/2CSRTnew/before.jpg')
+    plot_freq_domain(pw_interpolated, epoarray, sample_rate,
+                     noise_freq, band,
+                     suptitle='/Users/yukifujishima/Documents/2CSRTnew/after.jpg',
+                     save_path='/Users/yukifujishima/Documents/2CSRTnew/after.jpg')
     # Compute inverse fast fourier transform using numpy.fft.ifft
     # Transform the singal back into time domain.
     return ifft(ft_interpolated).real
 
 
-def plot_freq_domain(array: ndarray, sample_rate: float, noise_freq: float,
-                     freq_width: ndarray, suptitle: str, ch_names=None,
+def plot_freq_domain(power, array: ndarray, sample_rate: float, noise_freq: float,
+                     band: ndarray, suptitle: str, ch_names=None,
                      save_path=None) -> None:
     """Plot spectrum data of each sensor.
     Parameters
@@ -335,11 +344,12 @@ def plot_freq_domain(array: ndarray, sample_rate: float, noise_freq: float,
         channels: List[int] = list(range(n_chn))
     freq: ndarray = get_freq(array, sample_rate)
     idx: int = get_idx(60, freq)
-    llidx, lidx, hidx, hhidx = get_neighbor_idxs(noise_freq, freq_width, freq)
+    llidx, lidx, hidx, hhidx = get_neighbor_idxs(noise_freq, band, freq)
     print(idx, llidx, lidx, hidx, hhidx)
     for i in range(n_chn):
         axs[i].set_title(channels[i])
-        axs[i].plot(freq[1:70], np.log10(power[i][1:70]))
+        axs[i].plot(freq[1:250], np.log10(power[i][1:250]))
+#       axs[i].plot(freq[1:], np.log10(power[i][1:352]))
         axs[i].axvline(freq[llidx], color='red')
         axs[i].axvline(freq[lidx], color='red')
         axs[i].axvline(freq[hidx], color='red')

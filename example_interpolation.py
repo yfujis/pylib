@@ -9,7 +9,7 @@ import numpy as np
 from mne.io import read_raw_fif, Raw
 from mne import Epochs, EpochsArray, find_events
 
-from spectrum_interpolation import interpolate_freq
+from spectrum_interpolation import spectrum_interpolation
 
 
 # Reading raw data
@@ -29,12 +29,10 @@ other_channels: ndarray = epochs.get_data(picks=['stim', 'eog', 'eeg'])
 ch_names: List[str] = raw.pick_types(meg=True).info['ch_names']
 
 # Interpolate 50Hz
-epoarray_interpolated: ndarray = interpolate_freq(epoarray,
-                                                  sample_rate=1000,
-                                                  noise_freq=50,
-                                                  ch_names=ch_names,
-                                                  plot_pw_before=False,
-                                                  plot_pw_after=False)
+epoarray_interpolated: ndarray = spectrum_interpolation(epoarray,
+                                                        sample_rate=1000,
+                                                        noise_freq=50,
+                                                        freq_width=3)
 
 # Create a new Epochs instance.
 new_epoarray: ndarray = np.concatenate((epoarray_interpolated, other_channels),
