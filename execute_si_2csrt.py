@@ -25,6 +25,17 @@ fid = '/Users/yukifujishima/Documents/2CSRTnew/new_epo.dat'
 print(new_epo.shape)
 new_epo = new_epo.reshape(n_chn*n_trials*n_points)
 print(new_epo.shape)
+
+new_epo2 = new_epo
+
+new_epo2 = np.asfortranarray(new_epo)
+
+print(np.isfortran(new_epo))
+
+print(np.isfortran(new_epo2))
+
+print(new_epo2 == new_epo)
+
 new_epo.tofile(fid, format='float32')
 """
 pic_path: str = '/Users/yukifujishima/Documents/2CSRTnew/before.jpg'

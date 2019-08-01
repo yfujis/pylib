@@ -161,7 +161,7 @@ def spectrum_interpolation(array: ndarray, sample_rate: float,
 
     # Compute energy of each trial, channel, and frequency
     energy: ndarray = compute_energy(ft)
-    power: ndarray = compute_total_power(ft)
+    power: ndarray = compute_total_power(energy)
     # Interpolate the frequencies of noise
     # Please refer to interpolate_freq for more information.
     ft_interpolated: ndarray = interpolate_freq(noise_freq=noise_freq,
@@ -169,7 +169,8 @@ def spectrum_interpolation(array: ndarray, sample_rate: float,
                                                 freq=freq,
                                                 energy=energy,
                                                 ft=ft)
-    pw_interpolated: ndarray = compute_total_power(ft_interpolated)
+    ene_interpolated: ndarray = compute_energy(ft_interpolated)
+    pw_interpolated: ndarray = compute_total_power(ene_interpolated)
     plot_freq_domain(power, epoarray, sample_rate,
                      noise_freq, band,
                      suptitle='/Users/yukifujishima/Documents/2CSRTnew/before.jpg',
@@ -223,8 +224,8 @@ def plot_freq_domain(power, array: ndarray, sample_rate: float, noise_freq: floa
     print(idx, llidx, lidx, hidx, hhidx)
     for i in range(n_chn):
         axs[i].set_title(channels[i])
-        axs[i].plot(freq[1:250], np.log10(power[i][1:250]))
-#       axs[i].plot(freq[1:], np.log10(power[i][1:352]))
+#        axs[i].plot(freq[1:250], np.log10(power[i][1:250]))
+        axs[i].plot(np.log10(power[i][1:]))
         axs[i].axvline(freq[llidx], color='red')
         axs[i].axvline(freq[lidx], color='red')
         axs[i].axvline(freq[hidx], color='red')
