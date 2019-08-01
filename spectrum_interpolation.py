@@ -286,7 +286,7 @@ def spectrum_interpolation(array: ndarray, sample_rate: float,
 
     # Compute energy of each trial, channel, and frequency
     energy: ndarray = compute_energy(ft)
-    power: ndarray = compute_total_power(ft)
+    power: ndarray = compute_total_power(energy)
     # Interpolate the frequencies of noise
     # Please refer to interpolate_freq for more information.
     ft_interpolated: ndarray = interpolate_freq(noise_freq=noise_freq,
