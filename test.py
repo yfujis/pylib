@@ -9,7 +9,7 @@ import numpy as np
 from mne.io import read_raw_fif, Raw
 from mne import Epochs, EpochsArray, find_events
 
-from spectrum_interpolation import spectrum_interpolation
+from spectrum_interpolation import spectrum_interpolation, plot_freq_domain
 
 
 # Reading raw data
@@ -29,13 +29,21 @@ other_channels: ndarray = epochs.get_data(picks=['stim', 'eog', 'eeg'])
 ch_names: List[str] = raw.pick_types(meg=True).info['ch_names']
 
 # Interpolate 50Hz
-epoarray_interpolated: ndarray = spectrum_interpolation(epoarray,
-                                                        sample_rate=1000,
-                                                        noise_freq=50,
-                                                        freq_width=3)
+new_epo: ndarray = spectrum_interpolation(array=epoarray,
+                                          sample_rate=1000,
+                                          noise_freq=50,
+                                          freq_width=2)
+plot_freq_domain(array=epoarray, sample_rate=1000, noise_freq=50, freq_width=2,
+                 suptitle='before', ch_names=ch_names,
+                 save_path='/Users/yukifujishima/Documents/2CSRTnew/before.jpg')
+
+plot_freq_domain(array=new_epo, sample_rate=1000, noise_freq=50, freq_width=2,
+                 suptitle='after', ch_names=ch_names,
+                 save_path='/Users/yukifujishima/Documents/2CSRTnew/after.jpg')
+
 
 # Create a new Epochs instance.
-new_epoarray: ndarray = np.concatenate((epoarray_interpolated, other_channels),
+new_epoarray: ndarray = np.concatenate((new_epo, other_channels),
                                        axis=1)
 
 new_epochs: EpochsArray = EpochsArray(data=new_epoarray, info=epochs.info,
