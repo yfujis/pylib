@@ -172,11 +172,15 @@ def modify_ft(energy_ratio: ndarray,
     # Copy ft
     ft_new: ndarray = ft
 
+
+    print(ft[:, :, lidx:hidx])
+    print(ft[:, :, -hidx:-lidx])
     # Multiply the frequency domain signal data with the energy ratio.
     ft_new[:, :, lidx:hidx] = ft[:, :, lidx:hidx] * np.sqrt(energy_ratio)
     # Do the same to the other mirred half of the signal.
     flipped_ratio: ndarray = np.flip(energy_ratio, axis=2)
-    ft_new[:, :, -hidx:-lidx] = ft[:, :, -hidx:-lidx] * np.sqrt(flipped_ratio)
+    ft_new[:, :, -hidx:-lidx] = ft[:, :, -(hidx-1):-(lidx-1)] * np.sqrt(flipped_ratio)
+#   ft_new[:, :, -hidx:-lidx] = ft[:, :, -(hidx-1):-(lidx-1)] * np.sqrt(energy_ratio)
     return ft_new
 
 
@@ -294,7 +298,8 @@ def spectrum_interpolation(array: ndarray, sample_rate: float,
                                                 freq=freq,
                                                 energy=energy,
                                                 ft=ft)
-    pw_interpolated: ndarray = compute_total_power(ft_interpolated)
+    ene_interpolated: ndarray = compute_energy(ft_interpolated)
+    pw_interpolated: ndarray = compute_total_power(ene_interpolated)
     plot_freq_domain(power, epoarray, sample_rate,
                      noise_freq, band,
                      suptitle='/Users/yukifujishima/Documents/2CSRTnew/before.jpg',
@@ -348,8 +353,8 @@ def plot_freq_domain(power, array: ndarray, sample_rate: float, noise_freq: floa
     print(idx, llidx, lidx, hidx, hhidx)
     for i in range(n_chn):
         axs[i].set_title(channels[i])
-        axs[i].plot(freq[1:250], np.log10(power[i][1:250]))
-#       axs[i].plot(freq[1:], np.log10(power[i][1:352]))
+#        axs[i].plot(freq[1:250], np.log10(power[i][1:250]))
+        axs[i].plot(np.log10(power[i][1:]))
         axs[i].axvline(freq[llidx], color='red')
         axs[i].axvline(freq[lidx], color='red')
         axs[i].axvline(freq[hidx], color='red')
