@@ -101,7 +101,7 @@ def compute_energy(ftarray: ndarray) -> ndarray:
     return np.square(amplitude)
 
 
-def compute_total_power(ft: ndarray) -> ndarray:
+def compute_total_power(energy: ndarray) -> ndarray:
     """Compute total power of each frequency.
 
     Parameters
@@ -113,7 +113,6 @@ def compute_total_power(ft: ndarray) -> ndarray:
     power : ndarray(n_chn, n_dpoints)
 
     """
-    energy: ndarray = compute_energy(ft)
     print('Computing total power...')
     return np.mean(energy, axis=0)
 

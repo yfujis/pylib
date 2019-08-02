@@ -2,6 +2,7 @@
 
 
 from typing import List
+from pathlib import Path
 
 from numpy import ndarray
 import numpy as np
@@ -13,8 +14,10 @@ from spectrum_interpolation import spectrum_interpolation, plot_freq_domain
 
 
 # Reading raw data
-raw_path: str = '/Users/yukifujishima/example/example_raw_tsss.fif'
-raw: Raw = read_raw_fif(raw_path, preload=True).filter(1, 98)
+base_path: Path = Path('/Users/yukifujishima/example')
+fname: str = 'example_raw_tsss.fif'
+fpath: str = str(base_path / fname)
+raw: Raw = read_raw_fif(fpath, preload=True).filter(1, 98)
 
 # Making epochs
 events: ndarray = find_events(raw)
@@ -33,14 +36,17 @@ new_epo: ndarray = spectrum_interpolation(array=epoarray,
                                           sample_rate=1000,
                                           noise_freq=50,
                                           band=2)
-
+figname: str = 'before.jpg'
+figpath: str = str(base_path / figname)
 plot_freq_domain(array=epoarray, sample_rate=1000, noise_freq=50, band=2,
-                 suptitle='before', ch_names=ch_names,
-                 save_path='/Users/yukifujishima/example/before.jpg')
+                 suptitle=figname, ch_names=ch_names,
+                 save_path=figpath)
 
+figname2: str = 'after.jpg'
+figpath2: str = str(base_path / figname)
 plot_freq_domain(array=new_epo, sample_rate=1000, noise_freq=50, band=2,
-                 suptitle='after', ch_names=ch_names,
-                 save_path='/Users/yukifujishima/example/after.jpg')
+                 suptitle=figname2, ch_names=ch_names,
+                 save_path=figpath2)
 
 
 # Create a new Epochs instance.
@@ -51,5 +57,6 @@ new_epochs: EpochsArray = EpochsArray(data=new_epoarray, info=epochs.info,
                                       events=epochs.events, event_id=2)
 
 # Save the new Epochs file.
-new_epochs.save('/Users/yukifujishima/example/example_new-epo.fif',
-                overwrite=True)
+fname2: str = 'example_new-epo.fif'
+fpath2: str = str(base_path / fname2)
+new_epochs.save(fpath2, overwrite=True)
