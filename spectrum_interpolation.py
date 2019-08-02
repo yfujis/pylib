@@ -285,8 +285,7 @@ def compute_neighbor_mean_ene(noise_freq: float,
 
 
 def spectrum_interpolation(array: ndarray, sample_rate: float,
-                           noise_freq: float, ch_names=None,
-                           plot_pw_before=False, plot_pw_after=False) -> ndarray:
+                           noise_freq: float, band: float) -> ndarray:
     """Interpolate the frequency of noise.
 
     Parameters
@@ -325,7 +324,7 @@ def spectrum_interpolation(array: ndarray, sample_rate: float,
 
     # Compute energy of each trial, channel, and frequency
     energy: ndarray = compute_energy(ftarray)
-#   power: ndarray = compute_total_power(energy)
+
     # Interpolate the frequencies of noise
     # Please refer to interpolate_freq for more information.
     ft_interpolated: ndarray = interpolate_freq(noise_freq=noise_freq,
@@ -333,16 +332,7 @@ def spectrum_interpolation(array: ndarray, sample_rate: float,
                                                 freq=freq,
                                                 energy=energy,
                                                 ftarray=ftarray)
-#   ene_interpolated: ndarray = compute_energy(ft_interpolated)
-#   pw_interpolated: ndarray = compute_total_power(ene_interpolated)
-#   plot_freq_domain(power, epoarray, sample_rate,
-#                    noise_freq, band,
-#                    suptitle='/Users/yukifujishima/Documents/2CSRTnew/before.jpg',
-#                    save_path='/Users/yukifujishima/Documents/2CSRTnew/before.jpg')
-#   plot_freq_domain(pw_interpolated, epoarray, sample_rate,
-#                    noise_freq, band,
-#                    suptitle='/Users/yukifujishima/Documents/2CSRTnew/after.jpg',
-#                    save_path='/Users/yukifujishima/Documents/2CSRTnew/after.jpg')
+
     # Compute inverse fast fourier transform using numpy.fft.ifft
     # Transform the singal back into time domain.
     return ifft(ft_interpolated).real
