@@ -1,3 +1,6 @@
+# Demo of spectrum interpolation on EEG data (binary)
+
+
 from numpy import ndarray
 import numpy as np
 
