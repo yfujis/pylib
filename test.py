@@ -32,14 +32,15 @@ ch_names: List[str] = raw.pick_types(meg=True).info['ch_names']
 new_epo: ndarray = spectrum_interpolation(array=epoarray,
                                           sample_rate=1000,
                                           noise_freq=50,
-                                          freq_width=2)
-plot_freq_domain(array=epoarray, sample_rate=1000, noise_freq=50, freq_width=2,
-                 suptitle='before', ch_names=ch_names,
-                 save_path='/Users/yukifujishima/Documents/2CSRTnew/before.jpg')
+                                          band=2)
 
-plot_freq_domain(array=new_epo, sample_rate=1000, noise_freq=50, freq_width=2,
+plot_freq_domain(array=epoarray, sample_rate=1000, noise_freq=50, band=2,
+                 suptitle='before', ch_names=ch_names,
+                 save_path='/Users/yukifujishima/example/before.jpg')
+
+plot_freq_domain(array=new_epo, sample_rate=1000, noise_freq=50, band=2,
                  suptitle='after', ch_names=ch_names,
-                 save_path='/Users/yukifujishima/Documents/2CSRTnew/after.jpg')
+                 save_path='/Users/yukifujishima/example/after.jpg')
 
 
 # Create a new Epochs instance.

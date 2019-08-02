@@ -196,7 +196,7 @@ def modify_ftarray(energy_ratio: ndarray, ftarray: ndarray,
     ft_itped[:, :, lidx:hidx] = ftarray[:, :, lidx:hidx] * np.sqrt(energy_ratio)
     # Do the same to the other mirred half of the signal.
     flipped_ratio: ndarray = np.flip(energy_ratio, axis=2)
-    ft_itped[:, :, -hidx:-lidx] = ftarray[:, :, -(hidx-1):-(lidx-1)] * np.sqrt(flipped_ratio)
+    ft_itped[:, :, -(hidx-1):-(lidx-1)] = ftarray[:, :, -(hidx-1):-(lidx-1)] * np.sqrt(flipped_ratio)
     return ft_itped
 
 
@@ -393,10 +393,12 @@ def plot_freq_domain(array: ndarray, sample_rate: float, noise_freq: float,
     else:
         channels: List[int] = list(range(n_chn))
     freq: ndarray = get_freq(array, sample_rate)
+    xmax: float = 98
+    xmaxidx: int = get_idx(xmax, freq)
     llidx, lidx, hidx, hhidx = get_neighbor_idxs(noise_freq, band, freq)
     for i in range(n_chn):
         axs[i].set_title(channels[i])
-        axs[i].plot(freq[1:641], np.log10(power[i][1:641]))
+        axs[i].plot(freq[1:xmaxidx], np.log10(power[i][1:xmaxidx]))
         axs[i].axvline(freq[llidx], color='red')
         axs[i].axvline(freq[lidx], color='red')
         axs[i].axvline(freq[hidx], color='red')
