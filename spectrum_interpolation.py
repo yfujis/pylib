@@ -136,7 +136,7 @@ def interpolate_freq(noise_freq: float, band: float, freq: ndarray,
     noise_freq : int
         frequency to be interpolated.
     band : float
-        band width (Hz) to be included in the interpolation.
+        band width (hz) to be included in the interpolation.
     freq : ndarray
         1D array of frequencies. np.linspace(0, Nft, n_dpoints/2 +1)
     energy : ndarray(n_trials, n_chn, n_times)
@@ -170,23 +170,18 @@ def interpolate_freq(noise_freq: float, band: float, freq: ndarray,
     lidx, hidx = get_neighbor_idxs(noise_freq, band, freq, edge=False)
     energy_ratio: ndarray = neighbor_energy / energy[:, :, lidx:hidx]
 
-    return modify_ftarray(energy_ratio=energy_ratio,
-                          ftarray=ftarray,
-                          lidx=lidx,
-                          hidx=hidx)
+    return modify_ftarray(energy_ratio=energy_ratio, ftarray=ftarray,
+                          lidx=lidx, hidx=hidx)
 
 
-def modify_ftarray(energy_ratio: ndarray,
-                   ftarray: ndarray, lidx: int, hidx: int) -> ndarray:
+def modify_ftarray(energy_ratio: ndarray, ftarray: ndarray,
+                   lidx: int, hidx: int) -> ndarray:
     """Multiply frequency domain signal with the energy ratio.
 
     parameters
     ----------
     noise_freq : int
         frequency to be interpolated.
-    freq : float
-    energy : ndarray(n_trials, n_chn, n_times)
-        energy of each trials.
     ftarray : ndarray(n_trials, n_chn, n_times)
         epoch signal in frequency domain
     returns
@@ -207,13 +202,38 @@ def modify_ftarray(energy_ratio: ndarray,
 
 def get_idx(target_freq: float, freq: ndarray) -> int:
     """Get the index of the closest frequency.
+
+    parameters
+    ----------
+    target_freq : float
+        Freqency, the index of which we are looking for.
+    freq : ndarray
+        1D array of frequencies. np.linspace(0, Nft, n_dpoints/2 +1)
+        This function looks for the index of target_freq in this array.
+    returns
+    -------
+    idx : int
+        The idx for target_freq in freq.
     """
     return (np.abs(freq - target_freq)).argmin()
 
 
-def get_neighbor_idxs(noise_freq: float, band: float, freq: ndarray,
-                      edge=True):
+def get_neighbor_idxs(noise_freq: float, band: float,
+                      freq: ndarray, edge=True):
     """Get the indexes of neighboring frequencies.
+
+    parameters
+    ----------
+    noise_freq : int
+        frequency to be interpolated.
+    band : float
+        band width (Hz) to be included in the interpolation.
+    freq : ndarray
+        1D array of frequencies. np.linspace(0, Nft, n_dpoints/2 +1)
+    edge : bool
+        Default : True
+        If True, Indices of the border of higher & lower neighboring bands
+        will be returned. (llidx & hhidx)
     """
     if edge is not True:
         hfreq: float = noise_freq + band*0.5
@@ -261,8 +281,6 @@ def compute_neighbor_mean_ene(noise_freq: float,
     # Compute the mean of lower & higher neighboring frequencies.
     neighborene = (lfreq_ene + hfreq_ene)*0.5
     neighborene = np.array(neighborene)
-    print(hidx - lidx)
-    print(energy[:,:,lidx:hidx].shape[2])
     return np.repeat(neighborene, hidx - lidx, axis=2)
 
 
@@ -281,29 +299,24 @@ def spectrum_interpolation(array: ndarray, sample_rate: float,
         Sample rate (frequency) of EEG/MEG data.
     noise_freq : int
         Frequency to be interpolated.
-    ch_names : dict or list of channel names to be used in plotting
-        Default : None
-    plot_pw_before : bool
-        If it is True, the total power before interpolation will be plotted.
-        Default : None
-    plot_pw_after : bool
-        If it is True, the total power after interpolation will be plotted.
-        Default : None
+    band : float
+        band width (hz) to be included in the interpolation.
+
     Returns
     -------
     inverse_fourier : ndarray
         the signal in time domain after the interpolation.
+
     See Also
     --------
     Pleae refer to the docstring of each function for the details.
+
     """
     # Zero meaning the epoch array
     epoarray: ndarray = zero_mean(array)
 
     freq: ndarray = get_freq(array=epoarray,
                              sample_rate=sample_rate)
-    for pos, f in enumerate(freq):
-        print(pos, f)
 
     # Compute fast fourier transform using numpy.fft.fft
     # Transform the singal into complex waves in frequency domain.
@@ -311,7 +324,7 @@ def spectrum_interpolation(array: ndarray, sample_rate: float,
 
     # Compute energy of each trial, channel, and frequency
     energy: ndarray = compute_energy(ftarray)
-    power: ndarray = compute_total_power(energy)
+#   power: ndarray = compute_total_power(energy)
     # Interpolate the frequencies of noise
     # Please refer to interpolate_freq for more information.
     ft_interpolated: ndarray = interpolate_freq(noise_freq=noise_freq,
@@ -319,42 +332,62 @@ def spectrum_interpolation(array: ndarray, sample_rate: float,
                                                 freq=freq,
                                                 energy=energy,
                                                 ftarray=ftarray)
-    ene_interpolated: ndarray = compute_energy(ft_interpolated)
-    pw_interpolated: ndarray = compute_total_power(ene_interpolated)
-    plot_freq_domain(power, epoarray, sample_rate,
-                     noise_freq, band,
-                     suptitle='/Users/yukifujishima/Documents/2CSRTnew/before.jpg',
-                     save_path='/Users/yukifujishima/Documents/2CSRTnew/before.jpg')
-    plot_freq_domain(pw_interpolated, epoarray, sample_rate,
-                     noise_freq, band,
-                     suptitle='/Users/yukifujishima/Documents/2CSRTnew/after.jpg',
-                     save_path='/Users/yukifujishima/Documents/2CSRTnew/after.jpg')
+#   ene_interpolated: ndarray = compute_energy(ft_interpolated)
+#   pw_interpolated: ndarray = compute_total_power(ene_interpolated)
+#   plot_freq_domain(power, epoarray, sample_rate,
+#                    noise_freq, band,
+#                    suptitle='/Users/yukifujishima/Documents/2CSRTnew/before.jpg',
+#                    save_path='/Users/yukifujishima/Documents/2CSRTnew/before.jpg')
+#   plot_freq_domain(pw_interpolated, epoarray, sample_rate,
+#                    noise_freq, band,
+#                    suptitle='/Users/yukifujishima/Documents/2CSRTnew/after.jpg',
+#                    save_path='/Users/yukifujishima/Documents/2CSRTnew/after.jpg')
     # Compute inverse fast fourier transform using numpy.fft.ifft
     # Transform the singal back into time domain.
     return ifft(ft_interpolated).real
 
 
-def plot_freq_domain(power, array: ndarray, sample_rate: float, noise_freq: float,
-                     band: ndarray, suptitle: str, ch_names=None,
+def plot_freq_domain(array: ndarray, sample_rate: float, noise_freq: float,
+                     band: ndarray, suptitle=None, ch_names=None,
                      save_path=None) -> None:
     """Plot spectrum data of each sensor.
     Parameters
     ----------
     array : ndarray
-        The spectrum data to plot. the shape has to be (n_chn, n_dpoints)
+        Epoch array of EEG/MEG data.
+        The shape should be (N of trials,
+                             N of channels,
+                             N of time points)
+    sample_rate : int
+        Sample rate (frequency) of EEG/MEG data.
+    noise_freq : int
+        Frequency to be interpolated.
+    band : float
+        band width (hz) to be included in the interpolation.
+    suptitle : str
+        Default : None
+        Suptitle of the fig.
+    ch_names : dict or list of channel names to be used in plotting
+        Default : None
+    save_path : str
+        Default : None
+        The figure will be saved in this path.
+
     Returns
     -------
-    self
+    fig : matplotlib.figure.Figure
 
     """
     # Compute fast fourier transform using numpy.fft.fft
     # Transform the singal into complex waves in frequency domain.
-#   epoarray: ndarray = zero_mean(array)
-#   ftarray: ndarray = fft(epoarray)
+    epoarray: ndarray = zero_mean(array)
+    print('Computing fast fourier transform...')
+    ftarray: ndarray = fft(epoarray)
 
-#   # Compute power
-#   power: ndarray = compute_total_power(ft)
-    
+    # Compute power
+    energy: ndarray = compute_energy(ftarray)
+    power: ndarray = compute_total_power(energy)
+
     n_chn: int = array.shape[1]
 
     cols: int = 8
@@ -369,17 +402,15 @@ def plot_freq_domain(power, array: ndarray, sample_rate: float, noise_freq: floa
     else:
         channels: List[int] = list(range(n_chn))
     freq: ndarray = get_freq(array, sample_rate)
-    idx: int = get_idx(60, freq)
     llidx, lidx, hidx, hhidx = get_neighbor_idxs(noise_freq, band, freq)
-    print(idx, llidx, lidx, hidx, hhidx)
     for i in range(n_chn):
         axs[i].set_title(channels[i])
-#        axs[i].plot(freq[1:250], np.log10(power[i][1:250]))
-        axs[i].plot(np.log10(power[i][1:]))
+        axs[i].plot(freq[1:641], np.log10(power[i][1:641]))
         axs[i].axvline(freq[llidx], color='red')
         axs[i].axvline(freq[lidx], color='red')
         axs[i].axvline(freq[hidx], color='red')
         axs[i].axvline(freq[hhidx], color='red')
     if save_path is not None:
         fig.savefig(save_path)
-    return None
+        print('Figured saved : ' + save_path)
+    return fig
