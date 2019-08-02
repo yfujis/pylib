@@ -21,7 +21,7 @@ def get_shape(array: ndarray) -> ndarray:
     Parameters
     ----------
     array : ndarray
-        The epoch array.
+        Epoch array. (n_trials, n_chn, n_dpoints)
     Returns
     -------
     n_trials : int
@@ -40,6 +40,17 @@ def get_shape(array: ndarray) -> ndarray:
 
 def zero_mean(array: ndarray) -> ndarray:
     """Zero mean the epoch array.
+
+    Parameters
+    ----------
+    array : ndarray
+        epoch array. (n_trials, n_chn, n_dpoints)
+
+    Returns
+    -------
+    array : ndarray
+        Epoch array, the mean of which is 0.
+
     """
     print('Zero meaning...')
     return array - np.mean(array, axis=2, keepdims=True)
@@ -50,8 +61,8 @@ def get_freq(array: ndarray, sample_rate: float) -> ndarray:
 
     Parameters
     ----------
-    n_dpoints : int
-        The number of data points in one trial
+    array : ndarray
+        Epoch array. (n_trials, n_chn, n_dpoints)
     sample_rate : float
         The sampling rate of the experiment
 
@@ -67,12 +78,13 @@ def get_freq(array: ndarray, sample_rate: float) -> ndarray:
     return np.linspace(0, sample_rate/2, n_fcoefficients)
 
 
-def compute_energy(ft: ndarray) -> ndarray:
+def compute_energy(ftarray: ndarray) -> ndarray:
     """Compute energy of each unit(trial) in frequency domain
 
     Parameters
     ----------
-    ft : epoch data in freqnency domain (the result of fourier transform)
+    ftarray : ndarray
+        Epoch data in freqnency domain. (n_trials, n_chn, n_dpoints)
 
     Returns
     -------
@@ -85,54 +97,56 @@ def compute_energy(ft: ndarray) -> ndarray:
     a wave in frequency(or time) domain.
     """
     print('Computing energy of each unit(trial) in frequency domain')
-    amplitude: ndarray = abs(ft)
+    amplitude: ndarray = abs(ftarray)
     return np.square(amplitude)
 
 
-def compute_total_power(ft: ndarray) -> ndarray:
+def compute_total_power(energy: ndarray) -> ndarray:
     """Compute total power of each frequency.
 
     Parameters
     ----------
-    ft : epoch data in freqnency domain (the result of fourier transform)
+    energy : ndarray(n_trials, n_chn, n_dpoints)
 
     Returns
     -------
-    power : ndarray(N of data points in the frequency domain.)
+    power : ndarray(n_chn, n_dpoints)
 
     """
-    energy: ndarray = compute_energy(ft)
     print('Computing total power...')
     return np.mean(energy, axis=0)
 
 
-def trim_axs(axs, N):
+def trim_axs(axs, num):
     """Massage the axs list to have correct legnth.
     """
     axs = axs.flat
-    for ax in axs[N:]:
-        ax.remove()
-    return axs[:N]
+    for axi in axs[num:]:
+        axi.remove()
+    return axs[:num]
 
 
-def interpolate_freq(noise_freq: float, band: ndarray, freq: ndarray,
-                     energy: ndarray, ft: ndarray) -> ndarray:
+def interpolate_freq(noise_freq: float, band: float, freq: ndarray,
+                     energy: ndarray, ftarray: ndarray) -> ndarray:
     """Make the power of the frequency of noise the same as that of neighbors,
        while keeping the phase information as they are.
 
-    Parameters
+    parameters
     ----------
     noise_freq : int
-        Frequency to be interpolated.
-    freq : float
+        frequency to be interpolated.
+    band : float
+        band width (Hz) to be included in the interpolation.
+    freq : ndarray
+        1D array of frequencies. np.linspace(0, Nft, n_dpoints/2 +1)
     energy : ndarray(n_trials, n_chn, n_times)
-        Energy of each trials.
-    ft : ndarray(n_trials, n_chn, n_times)
-        Epoch signal in frequency domain
-    Returns
+        energy of each trials.
+    ftarray : ndarray(n_trials, n_chn, n_times)
+        epoch signal in frequency domain
+    returns
     -------
     ft_interpolated : ndarray(n_trials, n_chn, n_times)
-        Epoch signal in frequency domain after the interpolation.
+        epoch signal in frequency domain after the interpolation.
     Note
     ----
     For each epoch of each channel, the interpolation is executed by:
@@ -143,10 +157,7 @@ def interpolate_freq(noise_freq: float, band: ndarray, freq: ndarray,
         c = mean energy of neighboring frequencies
             / energy of a to-be-interpolsted frequency
     Please note that in this script, the noise_freq and surrounding
-    frequenies will be interpolated. By default, the 5 data points centerin
-    noise_freq will be interpolated. Please modify the code to make it
-    best suited for your own data. The range in Hz depends on the sampling
-    rate and the length of the signal.
+    frequenies will be interpolated.
     """
     print('Interpolating {}Hz'.format(noise_freq))
 
@@ -159,29 +170,39 @@ def interpolate_freq(noise_freq: float, band: ndarray, freq: ndarray,
     lidx, hidx = get_neighbor_idxs(noise_freq, band, freq, edge=False)
     energy_ratio: ndarray = neighbor_energy / energy[:, :, lidx:hidx]
 
-    return modify_ft(energy_ratio=energy_ratio,
-                     ft=ft,
-                     lidx=lidx,
-                     hidx=hidx)
+    return modify_ftarray(energy_ratio=energy_ratio,
+                          ftarray=ftarray,
+                          lidx=lidx,
+                          hidx=hidx)
 
 
-def modify_ft(energy_ratio: ndarray,
-              ft: ndarray, lidx: int, hidx: int) -> ndarray:
+def modify_ftarray(energy_ratio: ndarray,
+                   ftarray: ndarray, lidx: int, hidx: int) -> ndarray:
     """Multiply frequency domain signal with the energy ratio.
+
+    parameters
+    ----------
+    noise_freq : int
+        frequency to be interpolated.
+    freq : float
+    energy : ndarray(n_trials, n_chn, n_times)
+        energy of each trials.
+    ftarray : ndarray(n_trials, n_chn, n_times)
+        epoch signal in frequency domain
+    returns
+    -------
+    ft_itped : ndarray(n_trials, n_chn, n_times)
+        epoch signal in frequency domain after the interpolation.
     """
     # Copy ft
-    ft_new: ndarray = ft
+    ft_itped: ndarray = ftarray
 
-
-    print(ft[:, :, lidx:hidx])
-    print(ft[:, :, -hidx:-lidx])
     # Multiply the frequency domain signal data with the energy ratio.
-    ft_new[:, :, lidx:hidx] = ft[:, :, lidx:hidx] * np.sqrt(energy_ratio)
+    ft_itped[:, :, lidx:hidx] = ftarray[:, :, lidx:hidx] * np.sqrt(energy_ratio)
     # Do the same to the other mirred half of the signal.
     flipped_ratio: ndarray = np.flip(energy_ratio, axis=2)
-    ft_new[:, :, -hidx:-lidx] = ft[:, :, -(hidx-1):-(lidx-1)] * np.sqrt(flipped_ratio)
-#   ft_new[:, :, -hidx:-lidx] = ft[:, :, -(hidx-1):-(lidx-1)] * np.sqrt(energy_ratio)
-    return ft_new
+    ft_itped[:, :, -hidx:-lidx] = ftarray[:, :, -(hidx-1):-(lidx-1)] * np.sqrt(flipped_ratio)
+    return ft_itped
 
 
 def get_idx(target_freq: float, freq: ndarray) -> int:
@@ -286,10 +307,10 @@ def spectrum_interpolation(array: ndarray, sample_rate: float,
 
     # Compute fast fourier transform using numpy.fft.fft
     # Transform the singal into complex waves in frequency domain.
-    ft: ndarray = fft(epoarray)
+    ftarray: ndarray = fft(epoarray)
 
     # Compute energy of each trial, channel, and frequency
-    energy: ndarray = compute_energy(ft)
+    energy: ndarray = compute_energy(ftarray)
     power: ndarray = compute_total_power(energy)
     # Interpolate the frequencies of noise
     # Please refer to interpolate_freq for more information.
@@ -297,7 +318,7 @@ def spectrum_interpolation(array: ndarray, sample_rate: float,
                                                 band=band,
                                                 freq=freq,
                                                 energy=energy,
-                                                ft=ft)
+                                                ftarray=ftarray)
     ene_interpolated: ndarray = compute_energy(ft_interpolated)
     pw_interpolated: ndarray = compute_total_power(ene_interpolated)
     plot_freq_domain(power, epoarray, sample_rate,
@@ -329,7 +350,7 @@ def plot_freq_domain(power, array: ndarray, sample_rate: float, noise_freq: floa
     # Compute fast fourier transform using numpy.fft.fft
     # Transform the singal into complex waves in frequency domain.
 #   epoarray: ndarray = zero_mean(array)
-#   ft: ndarray = fft(epoarray)
+#   ftarray: ndarray = fft(epoarray)
 
 #   # Compute power
 #   power: ndarray = compute_total_power(ft)
