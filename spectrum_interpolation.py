@@ -126,6 +126,164 @@ def trim_axs(axs, num):
     return axs[:num]
 
 
+def interpolate_freq(noise_freq: float, band: float, freq: ndarray,
+                     energy: ndarray, ftarray: ndarray) -> ndarray:
+    """Make the power of the frequency of noise the same as that of neighbors,
+       while keeping the phase information as they are.
+
+    parameters
+    ----------
+    noise_freq : int
+        frequency to be interpolated.
+    band : float
+        band width (hz) to be included in the interpolation.
+    freq : ndarray
+        1D array of frequencies. np.linspace(0, Nft, n_dpoints/2 +1)
+    energy : ndarray(n_trials, n_chn, n_times)
+        energy of each trials.
+    ftarray : ndarray(n_trials, n_chn, n_times)
+        epoch signal in frequency domain
+    returns
+    -------
+    ft_interpolated : ndarray(n_trials, n_chn, n_times)
+        epoch signal in frequency domain after the interpolation.
+    Note
+    ----
+    For each epoch of each channel, the interpolation is executed by:
+        interpolated signal =  original signal * square root of c
+        where signal is a complex signal in frequency domain, and
+        c is a constant number computed by the equation below:
+
+        c = mean energy of neighboring frequencies
+            / energy of a to-be-interpolsted frequency
+    Please note that in this script, the noise_freq and surrounding
+    frequenies will be interpolated.
+    """
+    print('Interpolating {}Hz'.format(noise_freq))
+
+    neighbor_energy = compute_neighbor_mean_ene(noise_freq=noise_freq,
+                                                band=band,
+                                                freq=freq,
+                                                energy=energy)
+    # Compute the ratio between the mean energy of neighoring
+    # frequencies and the energy of each to-be-interpolated frequencies,
+    lidx, hidx = get_neighbor_idxs(noise_freq, band, freq, edge=False)
+    energy_ratio: ndarray = neighbor_energy / energy[:, :, lidx:hidx]
+
+    return modify_ftarray(energy_ratio=energy_ratio, ftarray=ftarray,
+                          lidx=lidx, hidx=hidx)
+
+
+def modify_ftarray(energy_ratio: ndarray, ftarray: ndarray,
+                   lidx: int, hidx: int) -> ndarray:
+    """Multiply frequency domain signal with the energy ratio.
+
+    parameters
+    ----------
+    noise_freq : int
+        frequency to be interpolated.
+    ftarray : ndarray(n_trials, n_chn, n_times)
+        epoch signal in frequency domain
+    returns
+    -------
+    ft_itped : ndarray(n_trials, n_chn, n_times)
+        epoch signal in frequency domain after the interpolation.
+    """
+    # Copy ft
+    ft_itped: ndarray = ftarray
+
+    # Multiply the frequency domain signal data with the energy ratio.
+    ft_itped[:, :, lidx:hidx] = ftarray[:, :, lidx:hidx] * np.sqrt(energy_ratio)
+    # Do the same to the other mirred half of the signal.
+    flipped_ratio: ndarray = np.flip(energy_ratio, axis=2)
+    ft_itped[:, :, -hidx:-lidx] = ftarray[:, :, -(hidx-1):-(lidx-1)] * np.sqrt(flipped_ratio)
+    return ft_itped
+
+
+def get_idx(target_freq: float, freq: ndarray) -> int:
+    """Get the index of the closest frequency.
+
+    parameters
+    ----------
+    target_freq : float
+        Freqency, the index of which we are looking for.
+    freq : ndarray
+        1D array of frequencies. np.linspace(0, Nft, n_dpoints/2 +1)
+        This function looks for the index of target_freq in this array.
+    returns
+    -------
+    idx : int
+        The idx for target_freq in freq.
+    """
+    return (np.abs(freq - target_freq)).argmin()
+
+
+def get_neighbor_idxs(noise_freq: float, band: float,
+                      freq: ndarray, edge=True):
+    """Get the indexes of neighboring frequencies.
+
+    parameters
+    ----------
+    noise_freq : int
+        frequency to be interpolated.
+    band : float
+        band width (Hz) to be included in the interpolation.
+    freq : ndarray
+        1D array of frequencies. np.linspace(0, Nft, n_dpoints/2 +1)
+    edge : bool
+        Default : True
+        If True, Indices of the border of higher & lower neighboring bands
+        will be returned. (llidx & hhidx)
+    """
+    if edge is not True:
+        hfreq: float = noise_freq + band*0.5
+        lfreq: float = noise_freq - band*0.5
+        hidx: int = get_idx(hfreq, freq)
+        lidx: int = get_idx(lfreq, freq)
+        return lidx, hidx
+    hfreq: float = noise_freq + band*0.5
+    lfreq: float = noise_freq - band*0.5
+    hhfreq: float = hfreq + band
+    llfreq: float = lfreq - band
+
+    hidx: int = get_idx(hfreq, freq)
+    lidx: int = get_idx(lfreq, freq)
+    hhidx: int = get_idx(hhfreq, freq)
+    llidx: int = get_idx(llfreq, freq)
+    return llidx, lidx, hidx, hhidx
+
+
+def mean_ene_of_range(freq1: int, freq2: int, energy: ndarray) -> ndarray:
+    """Compute the mean energy of a frequency range (freq1:freq2)
+    """
+    return np.mean(energy[:, :, freq1:freq2], axis=2, keepdims=True)
+
+
+def compute_neighbor_mean_ene(noise_freq: float,
+                              band: float,
+                              freq: ndarray,
+                              energy: ndarray) -> ndarray:
+    """Compute the mean energy of neighboring frequencies.
+    """
+
+    llidx, lidx, hidx, hhidx = get_neighbor_idxs(noise_freq, band, freq)
+
+    print('Computing the mean power of neighboring frequencies:')
+    print('\t{}-{}Hz, {}-{}Hz'.format(freq[llidx],
+                                      freq[lidx],
+                                      freq[hidx],
+                                      freq[hhidx],))
+
+    # Compute the mean energy of lower neighboring frequencies.
+    lfreq_ene: ndarray = mean_ene_of_range(llidx, lidx, energy)
+    # Compute the mean energy of higher neighboring frequencies.
+    hfreq_ene: ndarray = mean_ene_of_range(hidx, hhidx, energy)
+    # Compute the mean of lower & higher neighboring frequencies.
+    neighborene = (lfreq_ene + hfreq_ene)*0.5
+    neighborene = np.array(neighborene)
+    return np.repeat(neighborene, hidx - lidx, axis=2)
+
+
 def spectrum_interpolation(array: ndarray, sample_rate: float,
                            noise_freq: float, ch_names=None,
                            plot_pw_before=False, plot_pw_after=False) -> ndarray:
