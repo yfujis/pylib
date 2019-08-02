@@ -13,8 +13,14 @@ n_chn: int = 70
 n_trials: int = 60
 n_points: int = 1280
 
-epoarray = epoarray.reshape((n_chn, n_points*n_trials), order='F').reshape((n_chn, n_points, n_trials), order='F')
-epoarray = epoarray.swapaxes(1, 2).swapaxes(0, 1)
+
+# The data used in this example has been saved by Matlab (colum-major),
+# hence either of these reshaping strategies below will work.
+
+# epoarray = epoarray.reshape((n_chn, n_points*n_trials), order='F').reshape((n_chn, n_points, n_trials), order='F')
+# epoarray = epoarray.swapaxes(1, 2).swapaxes(0, 1)
+epoarray = epoarray.reshape(n_trials, n_points, n_chn)
+epoarray = epoarray.swapaxes(1, 2)
 
 sample_rate: float = 512
 noise_freq: float = 60
@@ -41,6 +47,9 @@ plot_freq_domain(array=new_epo,
                  suptitle='after.jpg',
                  save_path=pic2_path)
 
-new_epo = new_epo.reshape(n_chn*n_trials*n_points)
 
-new_epo.tofile(fid, format='float32')
+# Swap axes to save the file in the column-major wise.
+new_epo = new_epo.swapaxes(1, 2)
+new_epo2 = new_epo.reshape(n_chn*n_trials*n_points)
+
+new_epo2.tofile(fid, format='float32')
