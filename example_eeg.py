@@ -22,22 +22,6 @@ new_epo: ndarray = spectrum_interpolation(array=epoarray,
                                           noise_freq=noise_freq,
                                           band=band)
 fid = '/Users/yukifujishima/Documents/eeg_example/new_epo.dat'
-print(new_epo.shape)
-# new_epo = new_epo.reshape(n_chn*n_trials*n_points)
-print(new_epo.shape)
-
-new_epo2 = new_epo
-
-new_epo2 = np.asfortranarray(new_epo)
-
-print(np.isfortran(new_epo))
-
-print(np.isfortran(new_epo2))
-
-print(new_epo2 == new_epo)
-
-# new_epo.tofile(fid, format='float32')
-
 pic_path: str = '/Users/yukifujishima/Documents/eeg_example/before.jpg'
 
 plot_freq_domain(array=epoarray,
@@ -53,3 +37,7 @@ plot_freq_domain(array=new_epo,
                  band=band,
                  suptitle='after.jpg',
                  save_path=pic2_path)
+
+new_epo = new_epo.reshape(n_chn*n_trials*n_points)
+
+new_epo.tofile(fid, format='float32')
