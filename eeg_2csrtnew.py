@@ -35,22 +35,26 @@ for block in blocks:
     # The data used in this example has been saved by Matlab (colum-major),
     # hence either of these reshaping strategies below will work.
 
-    # epoarray = epoarray.reshape((n_chn, n_points*n_trials), order='F').reshape((n_chn, n_points, n_trials), order='F')
-    # epoarray = epoarray.swapaxes(1, 2).swapaxes(0, 1)
-    epoarray = epoarray.reshape(n_trials, n_points, n_chn)
+    epoarray = epoarray.reshape((n_chn, n_points*n_trials), order='F').reshape((n_chn, n_points, n_trials), order='F')
+    epoarray = epoarray.swapaxes(1, 2).swapaxes(0, 1)
+#   epoarray = epoarray.reshape(n_trials, n_points, n_chn)
     print(epoarray.shape)
-    epoarray = epoarray.swapaxes(1, 2)
+#   epoarray = epoarray.swapaxes(1, 2)
 
     new_epo: ndarray = spectrum_interpolation(array=epoarray,
                                               sample_rate=sample_rate,
                                               noise_freq=noise_freq,
                                               band=band)
     # Swap axes to save the file in the column-major wise.
-    # new_epo = new_epo.swapaxes(1, 2)
-    new_epo = np.transpose(new_epo, [0, 2, 1])
+#   new_epo = np.transpose(new_epo, [0, 2, 1])
     print(new_epo.shape)
+####new_epo2 = new_epo.swapaxes(0, 1).swapaxes(1, 2)
+    new_epo2 = new_epo.swapaxes(0, 2).swapaxes(1, 2)
 #   new_epo2 = new_epo.reshape(n_chn*n_trials*n_points)
-    new_epo2 = new_epo.reshape((n_chn*n_trials*n_points), order='F')
+    new_epo2 = new_epo2.reshape((n_chn, n_trials*n_points), order='F')
+#   new_epo2 = new_epo2.reshape((n_chn, n_trials*n_points))
+    new_epo2 = new_epo2.reshape((n_chn*n_trials*n_points))
+#   new_epo2 = new_epo2.reshape((n_chn*n_trials*n_points), order='F')
     fnamenew: str = '2csrt' + block + '-' + str(subject_n) + '.dat'
     fpathnew: str = str(base_path / fnamenew)
     new_epo2.tofile(fpathnew, format='float32')
@@ -60,19 +64,19 @@ for block in blocks:
     figpath: str = str(img_path / figname)
 
     plot_freq_domain(array=epoarray,
-                    sample_rate=sample_rate,
-                    noise_freq=noise_freq,
-                    band=band,
-                    suptitle=figname,
-                    save_path=figpath)
+                     sample_rate=sample_rate,
+                     noise_freq=noise_freq,
+                     band=band,
+                     suptitle=figname,
+                     save_path=figpath)
 
     figname2: str = '2csrt' + block + '-' + str(subject_n) + '_after.jpg'
     figpath2: str = str(img_path / figname2)
     plot_freq_domain(array=new_epo,
-                    sample_rate=sample_rate,
-                    noise_freq=noise_freq,
-                    band=band,
-                    suptitle=figname2,
-                    save_path=figpath2)
+                     sample_rate=sample_rate,
+                     noise_freq=noise_freq,
+                     band=band,
+                     suptitle=figname2,
+                     save_path=figpath2)
 
 
