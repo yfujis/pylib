@@ -1,7 +1,6 @@
 # Author: Yuki Fujishima <yfujishima1001@gmail.com>
 # Method developed by
-#    Leske, S., & Dalal, S. S. (2019).
-#    Reducing power line noise in EEG and MEG data via spectrum interpolation.
+#    Leske, S., & Dalal, S. S. (2019).  Reducing power line noise in EEG and MEG data via spectrum interpolation.
 #    NeuroImage, 189, 763–776. https://doi.org/10.1016/j.neuroimage.2019.01.026
 
 from typing import List
@@ -196,7 +195,7 @@ def modify_ftarray(energy_ratio: ndarray, ftarray: ndarray,
     ft_itped[:, :, lidx:hidx] = ftarray[:, :, lidx:hidx] * np.sqrt(energy_ratio)
     # Do the same to the other mirred half of the signal.
     flipped_ratio: ndarray = np.flip(energy_ratio, axis=2)
-    ft_itped[:, :, -(hidx-1):-(lidx-1)] = ftarray[:, :, -(hidx-1):-(lidx-1)] * np.sqrt(flipped_ratio)
+    ft_itped[:, :, -(hidx - 1):-(lidx - 1)] = ftarray[:, :, -(hidx - 1):-(lidx - 1)] * np.sqrt(flipped_ratio)
     return ft_itped
 
 
