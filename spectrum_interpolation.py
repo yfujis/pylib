@@ -26,7 +26,7 @@ def get_shape(array: ndarray) -> ndarray:
     n_trials : int
         Number of trials
     n_chn : int
-        Number of channels 
+        Number of channels
     n_dpoints : int
         Number of time point in a trial
 
