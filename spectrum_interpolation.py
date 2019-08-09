@@ -406,4 +406,5 @@ def plot_freq_domain(array: ndarray, sample_rate: float, noise_freq: float,
     if save_path is not None:
         fig.savefig(save_path)
         print('Figured saved : ' + save_path)
+    plt.close()
     return fig

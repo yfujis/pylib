@@ -62,6 +62,7 @@ plot_freq_domain(array=new_epo,
 
 # Swap axes to save the file in the column-major wise.
 new_epo = new_epo.swapaxes(1, 2)
+# new_epo = np.transpose(new_epo, [0, 2, 1])
 new_epo2 = new_epo.reshape(n_chn*n_trials*n_points)
 
 new_epo2.tofile(fid, format='float32')
