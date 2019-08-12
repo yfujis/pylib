@@ -24,11 +24,12 @@ if __name__ == '__main__':
 
     # The data used in this example has been saved by Matlab (colum-major),
     # hence either of these reshaping strategies below will work.
+    epoarray = epoarray.reshape((n_chn, n_points*n_trials), order='F').reshape((n_chn, n_points, n_trials), order='F')
 
     # epoarray = epoarray.reshape((n_chn, n_points*n_trials), order='F')
-    # epoarray = epoarray.swapaxes(1, 2).swapaxes(0, 1)
-    epoarray = epoarray.reshape(n_trials, n_points, n_chn)
-    epoarray = epoarray.swapaxes(1, 2)
+    epoarray = epoarray.swapaxes(1, 2).swapaxes(0, 1)
+#   epoarray = epoarray.reshape(n_trials, n_points, n_chn)
+#   epoarray = epoarray.swapaxes(1, 2)
 
     sample_rate: float = 512
     noise_freq: float = 60
