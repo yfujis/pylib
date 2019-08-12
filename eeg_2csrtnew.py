@@ -36,7 +36,7 @@ for block in blocks:
     # hence either of these reshaping strategies below will work.
 
     epoarray = epoarray.reshape((n_chn, n_points*n_trials), order='F').reshape((n_chn, n_points, n_trials), order='F')
-    epoarray = epoarray.swapaxes(1, 2).swapaxes(0, 1)
+#    epoarray = epoarray.swapaxes(1, 2).swapaxes(0, 1)
 #   epoarray = epoarray.reshape(n_trials, n_points, n_chn)
     print(epoarray.shape)
 #   epoarray = epoarray.swapaxes(1, 2)
@@ -48,12 +48,12 @@ for block in blocks:
     # Swap axes to save the file in the column-major wise.
 #   new_epo = np.transpose(new_epo, [0, 2, 1])
     print(new_epo.shape)
-####new_epo2 = new_epo.swapaxes(0, 1).swapaxes(1, 2)
-    new_epo2 = new_epo.swapaxes(0, 2).swapaxes(1, 2)
+#    new_epo2 = new_epo.swapaxes(0, 1).swapaxes(1, 2)
+#    new_epo2 = new_epo.swapaxes(0, 2).swapaxes(1, 2)
 #   new_epo2 = new_epo.reshape(n_chn*n_trials*n_points)
-    new_epo2 = new_epo2.reshape((n_chn, n_trials*n_points), order='F')
+#    new_epo2 = new_epo2.reshape((n_chn, n_trials*n_points), order='F')
 #   new_epo2 = new_epo2.reshape((n_chn, n_trials*n_points))
-    new_epo2 = new_epo2.reshape((n_chn*n_trials*n_points))
+    new_epo2 = new_epo.reshape((n_chn*n_trials*n_points))
 #   new_epo2 = new_epo2.reshape((n_chn*n_trials*n_points), order='F')
     fnamenew: str = '2csrt' + block + '-' + str(subject_n) + '.dat'
     fpathnew: str = str(base_path / fnamenew)
@@ -62,7 +62,7 @@ for block in blocks:
 
     figname: str = '2csrt' + block + '-' + str(subject_n) + '_before.jpg'
     figpath: str = str(img_path / figname)
-
+"""
     plot_freq_domain(array=epoarray,
                      sample_rate=sample_rate,
                      noise_freq=noise_freq,
@@ -80,3 +80,4 @@ for block in blocks:
                      save_path=figpath2)
 
 
+"""
