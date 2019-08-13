@@ -37,9 +37,10 @@ if __name__ == '__main__':
     band: float = 1
 
     new_epo: ndarray = spectrum_interpolation(array=epoarray,
-                                              sample_rate=sample_rate,
-                                              noise_freq=noise_freq,
-                                              band=band)
+                                            sample_rate=sample_rate,
+                                            noise_freq=noise_freq,
+                                            band=band)
+    print(False in np.isfinite(new_epo))
     fid: str = str(base_path / 'new_epo.dat')
 
     figname: str = 'before.jpg'
