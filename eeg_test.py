@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
     epoarray: ndarray = np.fromfile(fpath, dtype='float32')
 
-    n_chn: int = 70
+    n_chn: int = 71
     n_trials: int = 60
     n_points: int = 1280
 
@@ -38,27 +38,28 @@ if __name__ == '__main__':
                                             sample_rate=sample_rate,
                                             noise_freq=noise_freq,
                                             band=band)
+    print(False in np.isfinite(new_epo))
     fid: str = str(base_path / 'new_epo.dat')
 
     figname: str = 'before.jpg'
     figpath: str = str(base_path / figname)
 
     plot_freq_domain(array=epoarray,
-                    sample_rate=sample_rate,
-                    noise_freq=noise_freq,
-                    band=band,
-                    suptitle=figname,
-                    save_path=figpath)
+                     sample_rate=sample_rate,
+                     noise_freq=noise_freq,
+                     band=band,
+                     suptitle=figname,
+                     save_path=figpath)
 
     figname2: str = 'after.jpg'
-    figpath2: str = str(base_path / figname)
+    figpath2: str = str(base_path / figname2)
 
     plot_freq_domain(array=new_epo,
-                    sample_rate=sample_rate,
-                    noise_freq=noise_freq,
-                    band=band,
-                    suptitle=figname2,
-                    save_path=figpath2)
+                     sample_rate=sample_rate,
+                     noise_freq=noise_freq,
+                     band=band,
+                     suptitle=figname2,
+                     save_path=figpath2)
 
 
     # Swap axes to save the file in the column-major wise.

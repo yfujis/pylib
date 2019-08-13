@@ -73,8 +73,8 @@ def get_freq(array: ndarray, sample_rate: float) -> ndarray:
         frequency is the half of the sampling rate.
     """
     n_dpoints: int = array.shape[2]
-    n_fcoefficients = int((n_dpoints/2) + 1)  # N/2 +1
-    return np.linspace(0, sample_rate/2, n_fcoefficients)
+    n_fcoefficients = int((n_dpoints*0.5) + 1)  # N/2 +1
+    return np.linspace(0, sample_rate*0.5, n_fcoefficients)
 
 
 def compute_energy(ftarray: ndarray) -> ndarray:
@@ -167,7 +167,10 @@ def interpolate_freq(noise_freq: float, band: float, freq: ndarray,
     # Compute the ratio between the mean energy of neighoring
     # frequencies and the energy of each to-be-interpolated frequencies,
     lidx, hidx = get_neighbor_idxs(noise_freq, band, freq, edge=False)
-    energy_ratio: ndarray = neighbor_energy / energy[:, :, lidx:hidx]
+    a = neighbor_energy
+    b = energy[:, :, lidx:hidx]
+    energy_ratio: ndarray = np.divide(a, b, out=np.zeros_like(a), where=b!=0)
+#   energy_ratio: ndarray = neighbor_energy / energy[:, :, lidx:hidx]
 
     return modify_ftarray(energy_ratio=energy_ratio, ftarray=ftarray,
                           lidx=lidx, hidx=hidx)
