@@ -16,7 +16,6 @@ import matplotlib.pyplot as plt
 
 def get_shape(array: ndarray) -> ndarray:
     """Get the shape of epoch array data.
-
     Parameters
     ----------
     array : ndarray
@@ -26,10 +25,9 @@ def get_shape(array: ndarray) -> ndarray:
     n_trials : int
         Number of trials
     n_chn : int
-        Number of channels 
+        Number of channels
     n_dpoints : int
         Number of time point in a trial
-
     """
     n_trials: int = array.shape[0]  # Number of trials
     n_chn: int = array.shape[1]  # Number of channels
@@ -39,17 +37,14 @@ def get_shape(array: ndarray) -> ndarray:
 
 def zero_mean(array: ndarray) -> ndarray:
     """Zero mean the epoch array.
-
     Parameters
     ----------
     array : ndarray
         epoch array. (n_trials, n_chn, n_dpoints)
-
     Returns
     -------
     array : ndarray
         Epoch array, the mean of which is 0.
-
     """
     print('Zero meaning...')
     return array - np.mean(array, axis=2, keepdims=True)
@@ -57,14 +52,12 @@ def zero_mean(array: ndarray) -> ndarray:
 
 def get_freq(array: ndarray, sample_rate: float) -> ndarray:
     """Get the 1D array of frequency space.
-
     Parameters
     ----------
     array : ndarray
         Epoch array. (n_trials, n_chn, n_dpoints)
     sample_rate : float
         The sampling rate of the experiment
-
     Returns
     -------
     freq : ndarray[float], 1D array
@@ -73,22 +66,19 @@ def get_freq(array: ndarray, sample_rate: float) -> ndarray:
         frequency is the half of the sampling rate.
     """
     n_dpoints: int = array.shape[2]
-    n_fcoefficients = int((n_dpoints/2) + 1)  # N/2 +1
-    return np.linspace(0, sample_rate/2, n_fcoefficients)
+    n_fcoefficients = int((n_dpoints*0.5) + 1)  # N/2 +1
+    return np.linspace(0, sample_rate*0.5, n_fcoefficients)
 
 
 def compute_energy(ftarray: ndarray) -> ndarray:
     """Compute energy of each unit(trial) in frequency domain
-
     Parameters
     ----------
     ftarray : ndarray
         Epoch data in freqnency domain. (n_trials, n_chn, n_dpoints)
-
     Returns
     -------
     energy : ndarray(n_trials, n_chn, n_times)
-
     Notes
     _____
     Energy of a complex wave is square of the amplitude. Amplitude
@@ -102,15 +92,12 @@ def compute_energy(ftarray: ndarray) -> ndarray:
 
 def compute_total_power(energy: ndarray) -> ndarray:
     """Compute total power of each frequency.
-
     Parameters
     ----------
     energy : ndarray(n_trials, n_chn, n_dpoints)
-
     Returns
     -------
     power : ndarray(n_chn, n_dpoints)
-
     """
     print('Computing total power...')
     return np.mean(energy, axis=0)
@@ -129,7 +116,6 @@ def interpolate_freq(noise_freq: float, band: float, freq: ndarray,
                      energy: ndarray, ftarray: ndarray) -> ndarray:
     """Make the power of the frequency of noise the same as that of neighbors,
        while keeping the phase information as they are.
-
     parameters
     ----------
     noise_freq : int
@@ -152,7 +138,6 @@ def interpolate_freq(noise_freq: float, band: float, freq: ndarray,
         interpolated signal =  original signal * square root of c
         where signal is a complex signal in frequency domain, and
         c is a constant number computed by the equation below:
-
         c = mean energy of neighboring frequencies
             / energy of a to-be-interpolsted frequency
     Please note that in this script, the noise_freq and surrounding
@@ -167,7 +152,10 @@ def interpolate_freq(noise_freq: float, band: float, freq: ndarray,
     # Compute the ratio between the mean energy of neighoring
     # frequencies and the energy of each to-be-interpolated frequencies,
     lidx, hidx = get_neighbor_idxs(noise_freq, band, freq, edge=False)
-    energy_ratio: ndarray = neighbor_energy / energy[:, :, lidx:hidx]
+    a = neighbor_energy
+    b = energy[:, :, lidx:hidx]
+    energy_ratio: ndarray = np.divide(a, b, out=np.zeros_like(a), where=b!=0)
+#   energy_ratio: ndarray = neighbor_energy / energy[:, :, lidx:hidx]
 
     return modify_ftarray(energy_ratio=energy_ratio, ftarray=ftarray,
                           lidx=lidx, hidx=hidx)
@@ -176,7 +164,6 @@ def interpolate_freq(noise_freq: float, band: float, freq: ndarray,
 def modify_ftarray(energy_ratio: ndarray, ftarray: ndarray,
                    lidx: int, hidx: int) -> ndarray:
     """Multiply frequency domain signal with the energy ratio.
-
     parameters
     ----------
     noise_freq : int
@@ -201,7 +188,6 @@ def modify_ftarray(energy_ratio: ndarray, ftarray: ndarray,
 
 def get_idx(target_freq: float, freq: ndarray) -> int:
     """Get the index of the closest frequency.
-
     parameters
     ----------
     target_freq : float
@@ -220,7 +206,6 @@ def get_idx(target_freq: float, freq: ndarray) -> int:
 def get_neighbor_idxs(noise_freq: float, band: float,
                       freq: ndarray, edge=True):
     """Get the indexes of neighboring frequencies.
-
     parameters
     ----------
     noise_freq : int
@@ -286,7 +271,6 @@ def compute_neighbor_mean_ene(noise_freq: float,
 def spectrum_interpolation(array: ndarray, sample_rate: float,
                            noise_freq: float, band: float) -> ndarray:
     """Interpolate the frequency of noise.
-
     Parameters
     ----------
     array : ndarray
@@ -300,16 +284,13 @@ def spectrum_interpolation(array: ndarray, sample_rate: float,
         Frequency to be interpolated.
     band : float
         band width (hz) to be included in the interpolation.
-
     Returns
     -------
     inverse_fourier : ndarray
         the signal in time domain after the interpolation.
-
     See Also
     --------
     Pleae refer to the docstring of each function for the details.
-
     """
     # Zero meaning the epoch array
     epoarray: ndarray = zero_mean(array)
@@ -362,11 +343,9 @@ def plot_freq_domain(array: ndarray, sample_rate: float, noise_freq: float,
     save_path : str
         Default : None
         The figure will be saved in this path.
-
     Returns
     -------
     fig : matplotlib.figure.Figure
-
     """
     # Compute fast fourier transform using numpy.fft.fft
     # Transform the singal into complex waves in frequency domain.
