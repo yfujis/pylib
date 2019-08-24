@@ -1,6 +1,7 @@
 # Author: Yuki Fujishima <yfujishima1001@gmail.com>
 # Method developed by
-#    Leske, S., & Dalal, S. S. (2019).  Reducing power line noise in EEG and MEG data via spectrum interpolation.
+#    Leske, S., & Dalal, S. S. (2019).
+#    Reducing power line noise in EEG and MEG data via spectrum interpolation.
 #    NeuroImage, 189, 763–776. https://doi.org/10.1016/j.neuroimage.2019.01.026
 
 from typing import List
@@ -369,7 +370,7 @@ def plot_freq_domain(array: ndarray, sample_rate: float, noise_freq: float,
     if ch_names is not None:
         channels = ch_names
     else:
-        channels: List[int] = list(range(n_chn))
+        channels = list(range(n_chn))
     freq: ndarray = get_freq(array, sample_rate)
     xmax: float = 98
     xmaxidx: int = get_idx(xmax, freq)
