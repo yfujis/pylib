@@ -1,13 +1,17 @@
-# Demo of spectrum interpolation on EEG data (binary)
+#!/usr/bin/env python
+"""
+Demo of spectrum interpolation on EEG data (binary)
 
+Useage:
 
+This describes the script.
+"""
 from pathlib import Path
 
 from numpy import ndarray
 import numpy as np
 
 from spectrum_interpolation import spectrum_interpolation, plot_freq_domain
-
 
 
 if __name__ == '__main__':
@@ -21,9 +25,9 @@ if __name__ == '__main__':
     n_trials: int = 60
     n_points: int = 1280
 
-
     # The data used in this example has been saved by Matlab (colum-major).
-    epoarray = epoarray.reshape((n_chn, n_points*n_trials), order='F').reshape((n_chn, n_points, n_trials), order='F')
+    epoarray = epoarray.reshape((n_chn, n_points*n_trials), order='F')
+    epoarray = epoarray.reshape((n_chn, n_points, n_trials), order='F')
     epoarray = epoarray.swapaxes(1, 2).swapaxes(0, 1)
 #   epoarray = epoarray.reshape(n_trials, n_points, n_chn)
 #   epoarray = epoarray.swapaxes(1, 2)
@@ -33,9 +37,9 @@ if __name__ == '__main__':
     band: float = 1
 
     new_epo: ndarray = spectrum_interpolation(array=epoarray,
-                                            sample_rate=sample_rate,
-                                            noise_freq=noise_freq,
-                                            band=band)
+                                              sample_rate=sample_rate,
+                                              noise_freq=noise_freq,
+                                              band=band)
     print(False in np.isfinite(new_epo))
     fid: str = str(base_path / 'new_epo.dat')
 
@@ -59,11 +63,9 @@ if __name__ == '__main__':
                      suptitle=figname2,
                      save_path=figpath2)
 
-
     # Swap axes to save the file in the column-major wise.
     new_epo2 = new_epo.swapaxes(0, 1).swapaxes(1, 2)
     new_epo2 = new_epo2.reshape((n_chn, n_trials*n_points), order='F')
     new_epo2 = new_epo2.reshape((n_chn*n_trials*n_points), order='F')
-    
 
     new_epo2.tofile(fid, format='float32')
