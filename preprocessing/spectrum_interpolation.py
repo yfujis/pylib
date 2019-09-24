@@ -80,12 +80,12 @@ def plot(arr: ndarray, sfreq: float, ch_names: List[str],
     else:
         channels = list(range(n_chn))
 
-    cols: int = 12  # The number of columns
-    fig, axs = plt.subplots(n_chn // cols + 1, cols, figsize=(20, 30))
+    cols: int = 8  # The number of columns
+    fig, axs = plt.subplots(n_chn // cols + 1, cols, figsize=(20, 15))
     plt.tight_layout()
-    axs = trim_axs(axs, n_chn)
-    fminidx: int = get_idx(fmin, freqs)
-    fmaxidx: int = get_idx(fmax, freqs)
+    axs = _trim_axs(axs, n_chn)
+    fminidx: int = _get_idx(fmin, freqs)
+    fmaxidx: int = _get_idx(fmax, freqs)
     for i in range(n_chn):
         axs[i].set_title(channels[i])
         axs[i].plot(freqs[fminidx:fmaxidx], power[i][fminidx:fmaxidx])
@@ -176,8 +176,8 @@ def _mean_energy(energy: ndarray, freq_range: Tuple[float, float],
         hidx (int): Index of the upper end of the frequency range.
 
     """
-    lidx = get_idx(freq_range[0], freqs)
-    hidx = get_idx(freq_range[1], freqs)
+    lidx = _get_idx(freq_range[0], freqs)
+    hidx = _get_idx(freq_range[1], freqs)
     return np.mean(energy[lidx:hidx]), lidx, hidx
 
 
@@ -212,7 +212,7 @@ def _neighbour_mean(energy: ndarray, noise_freq: float, bandwidth: float,
     return neighbour_mean, lidx, hidx
 
 
-def trim_axs(axs: ndarray, n_axs: int) -> ndarray:
+def _trim_axs(axs: ndarray, n_axs: int) -> ndarray:
     """Massage the axs list to have correct legnth.
     Args:
         axs (ndarray): Array of Axes.
@@ -226,8 +226,8 @@ def trim_axs(axs: ndarray, n_axs: int) -> ndarray:
     return axs[:n_axs]
 
 
-def get_idx(target: float, series: ndarray) -> int:
-    """Get the index of the closest frequency.
+def _get_idx(target: float, series: ndarray) -> int:
+    """Get the index of the cloest value in the series.
     Args:
         target (float): Target value, the index of which you are looking for.
         series (ndarray): This function returns the index of

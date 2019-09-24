@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Demo of spectrum interpolation on EEG data (binary)
 
@@ -11,57 +11,46 @@ from pathlib import Path
 from numpy import ndarray
 import numpy as np
 
-from spectrum_interpolation import spectrum_interpolation, plot_freq_domain
+from preprocessing.spectrum_interpolation import interpolate, plot
 
 
 if __name__ == '__main__':
-    base_path: Path = Path('/Users/yukifujishima/Documents/eeg_example')
-    fname: str = 'example_eeg.dat'
-    fpath: str = str(base_path / fname)
+    base_path = Path('/Users/yukifujishima/Documents/eeg_example')
+    fname = 'example_eeg.dat'
+    fpath = str(base_path / fname)
 
-    epoarray: ndarray = np.fromfile(fpath, dtype='float32')
+    epo: ndarray = np.fromfile(fpath, dtype='float32')
 
     n_chn: int = 71
     n_trials: int = 60
     n_points: int = 1280
 
+    sfreq: float = 512.
+
     # The data used in this example has been saved by Matlab (colum-major).
-    epoarray = epoarray.reshape((n_chn, n_points*n_trials), order='F')
-    epoarray = epoarray.reshape((n_chn, n_points, n_trials), order='F')
-    epoarray = epoarray.swapaxes(1, 2).swapaxes(0, 1)
-#   epoarray = epoarray.reshape(n_trials, n_points, n_chn)
-#   epoarray = epoarray.swapaxes(1, 2)
+    epo = epo.reshape((n_chn, n_points*n_trials), order='F')
+    epo = epo.reshape((n_chn, n_points, n_trials), order='F')
+    print(epo.shape)
+    epo = epo.swapaxes(1, 2).swapaxes(0, 1)
 
-    sample_rate: float = 512
-    noise_freq: float = 60
-    band: float = 1
+    new_epo: ndarray = interpolate(arr=epo, noise_freq=60,
+                                   bandwidth=1, sfreq=sfreq,
+                                   n_jobs=4)
+    fid = str(base_path / 'new_epo.dat')
 
-    new_epo: ndarray = spectrum_interpolation(array=epoarray,
-                                              sample_rate=sample_rate,
-                                              noise_freq=noise_freq,
-                                              band=band)
-    print(False in np.isfinite(new_epo))
-    fid: str = str(base_path / 'new_epo.dat')
-
-    figname: str = 'before.jpg'
+    figname: str = 'before.png'
     figpath: str = str(base_path / figname)
 
-    plot_freq_domain(array=epoarray,
-                     sample_rate=sample_rate,
-                     noise_freq=noise_freq,
-                     band=band,
-                     suptitle=figname,
-                     save_path=figpath)
+    ch_names = list(map(lambda x: str(x), range(n_chn)))
 
-    figname2: str = 'after.jpg'
+    before = plot(epo, sfreq=sfreq, ch_names=ch_names)
+    before.savefig(figpath)
+
+    figname2: str = 'after.png'
     figpath2: str = str(base_path / figname2)
 
-    plot_freq_domain(array=new_epo,
-                     sample_rate=sample_rate,
-                     noise_freq=noise_freq,
-                     band=band,
-                     suptitle=figname2,
-                     save_path=figpath2)
+    after = plot(new_epo, sfreq=sfreq, ch_names=ch_names)
+    after.savefig(figpath2)
 
     # Swap axes to save the file in the column-major wise.
     new_epo2 = new_epo.swapaxes(0, 1).swapaxes(1, 2)
