@@ -12,7 +12,7 @@ Method developed by
 from typing import List, Tuple
 
 from functools import partial
-import multiprocessing as mp
+from multiprocessing import Pool
 
 from numpy import ndarray
 from numpy.fft import fft, ifft, rfftfreq
@@ -44,8 +44,8 @@ def interpolate(arr: ndarray, noise_freq: float,
     freqs: ndarray = rfftfreq(arr.shape[2], sample_spacing)
     interpo = partial(_interpolate, noise_freq=noise_freq,
                       bandwidth=bandwidth, freqs=freqs)
-    pool = mp.Pool(processes=n_jobs)
-    interpolated = np.array(list(map(lambda x: pool.map(interpo, x),
+    with Pool(processes=n_jobs) as pool:
+        interpolated = np.array(list(map(lambda x: pool.map(interpo, x),
                                      freqdomain)))
     return ifft(interpolated)
 
