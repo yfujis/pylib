@@ -1,5 +1,5 @@
 # Example of interpolation using mne-python on MEG data
-
+"""
 
 from typing import List
 from pathlib import Path
@@ -60,3 +60,4 @@ new_epochs: EpochsArray = EpochsArray(data=new_epoarray, info=epochs.info,
 fname2: str = 'example_new-epo.fif'
 fpath2: str = str(base_path / fname2)
 new_epochs.save(fpath2, overwrite=True)
+"""
