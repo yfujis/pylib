@@ -1,0 +1,1 @@
+export VIRTUAL_ENV=$CONDA_PREFIX

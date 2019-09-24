@@ -33,7 +33,6 @@ def interpolate(arr: ndarray, noise_freq: float,
         bandwidth (float): The width of frequencies you want to interpolate
         sfreq (float)    : Sample frequency of the recording
         n_jobs: The number of processes you want to run parallelly.
-
     Returns:
         new_array (ndarray): The epochs array after spectrum interpolation
 
@@ -53,26 +52,18 @@ def interpolate(arr: ndarray, noise_freq: float,
 def plot(arr: ndarray, sfreq: float, ch_names: List[str],
          fmin: float = 1., fmax: float = 98.) -> Figure:
     """Plot power spectrum of an epoch array.
-
     Args:
         arr (ndarray): The signal in time domain. The shape must be n_trials,
                        n_chan, n_dpoints).
-        sfreq (float): Sample frequency
-        ch_names (List[str]): List of channel names
-
+        sfreq (float)    : Sample frequency
     Returns:
-        fig (Figure): Plotted figure. Use fig.savefig(path) to save it.
+        fig (Figure):
 
     """
-    # Zero meaning
     arr -= arr.mean(axis=2, keepdims=True)
-    # Compute Power
     power: ndarray = np.mean(np.square(abs(fft(arr))), axis=0)
-
-    # Get frequencies
     freqs: ndarray = rfftfreq(arr.shape[2], 1 / sfreq)
 
-    # The number of channels
     n_chn: int = arr.shape[1]
 
     if ch_names is not None:
@@ -80,7 +71,7 @@ def plot(arr: ndarray, sfreq: float, ch_names: List[str],
     else:
         channels = list(range(n_chn))
 
-    cols: int = 12  # The number of columns
+    cols: int = 12
     fig, axs = plt.subplots(n_chn // cols + 1, cols, figsize=(20, 30))
     plt.tight_layout()
     axs = trim_axs(axs, n_chn)
@@ -108,32 +99,23 @@ def _interpolate(data: ndarray, noise_freq: float,
     neighbour_mean, lidx, hidx = _neighbour_mean(energy, noise_freq,
                                                  bandwidth, freqs)
     ratio: ndarray = _compute_ratio(energy, neighbour_mean, lidx, hidx)
-    new_data = _modify_freqdomain(data, ratio, lidx, hidx)
+    new_data = _interpolate_noise(data, ratio, lidx, hidx)
     return new_data
 
 
-def _modify_freqdomain(data: ndarray, ratio: ndarray,
+def _interpolate_noise(data: ndarray, ratio: ndarray,
                        lidx: int, hidx: int) -> ndarray:
-    """Modify the frequency domain signal so that the energy of noise frequencies
-       will be that of their neighbouring frequencies.
+    """Docstring for _interpolate_noise.
 
     Args:
-        data (ndarray): Single trial frequency domain data
-        ratio (ndarray): The ratio inbetween the power of noise frequencies
-                         and neighbour frequencies
-        lidx (int): Index of the lower end of the noise frequencies.
-        hidx (int): Index of the upper end of the noise frequencies.
+        arg1 ():
 
     Returns:
-        new_data (ndarray): Single trial frequency domain data
-                            after the interpolation
 
     """
     # Copy data
     new_data: ndarray = data
-    # Multiply the frequency domain signal data by the square root of energy
-    # ratio. The energy (power) will be that of neighbours while the original
-    # phase information is kept.
+    # Multiply the frequency domain signal data with the energy ratio.
     new_data[lidx:hidx] = data[lidx:hidx] * np.sqrt(ratio)
     # Do the same to the other mirred half of the signal.
     mirrored_ratio: ndarray = np.flip(ratio)
@@ -144,16 +126,12 @@ def _modify_freqdomain(data: ndarray, ratio: ndarray,
 
 def _compute_ratio(energy: ndarray, neighbour_mean: ndarray,
                    lidx: int, hidx: int) -> ndarray:
-    """Compute the energy ratio of noise frequencies and their neighbouring
-       frequencies.
+    """Docstring for _compute_ratio.
 
     Args:
-        energy (ndarray): Energy array of single trial (n_dpoints, )
-        neighbour (ndarray): The mean of the neighbour energy. The size of the
-                             array should be the same as that of energy array.
+        arg1 ():
 
     Returns:
-        ratio (ndarray): Array of ratio
 
     """
     return np.divide(neighbour_mean, energy[lidx:hidx],
