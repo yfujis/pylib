@@ -4,8 +4,9 @@
 #    Reducing power line noise in EEG and MEG data via spectrum interpolation.
 #    NeuroImage, 189, 763–776. https://doi.org/10.1016/j.neuroimage.2019.01.026
 
+from typing import List, Tuple
 from numpy import ndarray
-from numpy.fft import fft, ifft
+from numpy.fft import fft, ifft, rfftfreq
 import numpy as np
 
 import matplotlib
@@ -13,103 +14,6 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
-
-def get_shape(array: ndarray) -> ndarray:
-    """Get the shape of epoch array data.
-    Parameters
-    ----------
-    array : ndarray
-        Epoch array. (n_trials, n_chn, n_dpoints)
-    Returns
-    -------
-    n_trials : int
-        Number of trials
-    n_chn : int
-        Number of channels
-    n_dpoints : int
-        Number of time point in a trial
-    """
-    n_trials: int = array.shape[0]  # Number of trials
-    n_chn: int = array.shape[1]  # Number of channels
-    n_dpoints: int = array.shape[2]  # Number of time points
-    return n_trials, n_chn, n_dpoints
-
-
-def zero_mean(array: ndarray) -> ndarray:
-    """Zero mean the epoch array.
-    Parameters
-    ----------
-    array : ndarray
-        epoch array. (n_trials, n_chn, n_dpoints)
-    Returns
-    -------
-    array : ndarray
-        Epoch array, the mean of which is 0.
-    """
-    print('Zero meaning...')
-    return array - np.mean(array, axis=2, keepdims=True)
-
-
-def get_freq(array: ndarray, sample_rate: float) -> ndarray:
-    """Get the 1D array of frequency space.
-    Parameters
-    ----------
-    array : ndarray
-        Epoch array. (n_trials, n_chn, n_dpoints)
-    sample_rate : float
-        The sampling rate of the experiment
-    Returns
-    -------
-    freq : ndarray[float], 1D array
-        The frequency space to plot. Through fourier transform, we are able to
-        see the signal in frequency domain (0-Nyquist frequency), where Nyquist
-        frequency is the half of the sampling rate.
-    """
-    n_dpoints: int = array.shape[2]
-    n_fcoefficients = int((n_dpoints*0.5) + 1)  # N/2 +1
-    return np.linspace(0, sample_rate*0.5, n_fcoefficients)
-
-
-def compute_energy(ftarray: ndarray) -> ndarray:
-    """Compute energy of each unit(trial) in frequency domain
-    Parameters
-    ----------
-    ftarray : ndarray
-        Epoch data in freqnency domain. (n_trials, n_chn, n_dpoints)
-    Returns
-    -------
-    energy : ndarray(n_trials, n_chn, n_times)
-    Notes
-    _____
-    Energy of a complex wave is square of the amplitude. Amplitude
-    is the absolute value of z, where z is a + bj, that represents
-    a wave in frequency(or time) domain.
-    """
-    print('Computing energy of each unit(trial) in frequency domain')
-    amplitude: ndarray = abs(ftarray)
-    return np.square(amplitude)
-
-
-def compute_total_power(energy: ndarray) -> ndarray:
-    """Compute total power of each frequency.
-    Parameters
-    ----------
-    energy : ndarray(n_trials, n_chn, n_dpoints)
-    Returns
-    -------
-    power : ndarray(n_chn, n_dpoints)
-    """
-    print('Computing total power...')
-    return np.mean(energy, axis=0)
-
-
-def trim_axs(axs, num):
-    """Massage the axs list to have correct legnth.
-    """
-    axs = axs.flat
-    for axi in axs[num:]:
-        axi.remove()
-    return axs[:num]
 
 
 def interpolate_freq(noise_freq: float, band: float, freq: ndarray,
@@ -161,6 +65,246 @@ def interpolate_freq(noise_freq: float, band: float, freq: ndarray,
                           lidx=lidx, hidx=hidx)
 
 
+def zero_mean(arr: ndarray) -> ndarray:
+    """TODO: Make an epoch array zero mean.
+    Args:
+        arr (ndarray): The signal in time domain. The shape must be n_trials,
+                       n_chan, n_dpoints).
+    Returns:
+        arr (ndarray): The signal in time domain with mean being zero.
+
+    """
+    return arr - arr.mean(axis=2, keepdims=True)
+
+
+def fourier_transform(arr: ndarray, sfreq: ndarray) -> Tuple[ndarray, ndarray]:
+    """TODO: Docstring for fourier_transform.
+
+    Args:
+        arr (ndarray): The signal in time domain. The shape must be n_trials,
+                       n_chan, n_dpoints).
+
+    Returns: TODO
+        freqdomain (ndarray): The signal in frequency domain.
+        freqs (ndarray)     : Frequencies with length n_dpoints //2 +1
+                              containing the sample frequencies
+    """
+    freqdomain: ndarray = fft(arr)
+    sample_spacing: float = 1 / sfreq
+    freqs: ndarray = rfftfreq(arr.shape[2], sample_spacing)
+    return (freqdomain, freqs)
+
+def compute_energy(freqdomain: ndarray) -> ndarray:
+    """Compute energy of each unit(trial) in frequency domain.
+    Energy of a complex wave is square of the amplitude. Amplitude
+    is the absolute value of z, where z is a + bj, that represents
+    a wave in frequency(or time) domain.
+
+    Args:
+        freqdomain: ndarray = 
+
+    Returns:
+        Energy
+    """
+
+
+def interpolate(arr: ndarray, sfreq: ndarray) -> ndarray:
+    """TODO: Docstring for interpolate.
+    Args:
+        arr (ndarray): The signal in time domain. The shape must be n_trials,
+                       n_chan, n_dpoints).
+        sfreq (float)    : Sample frequency
+    Returns: TODO
+        freqdomain (ndarray): The signal in frequency domain.
+
+    """
+    arr -= arr.mean(axis=2, keepdims=True)
+    freqdomain: ndarray = fft(arr)
+    energy = ndarray = 
+    return arr2
+
+def _interpolate(data: ndarray, freq)
+
+
+class Signals:
+    """description"""
+    def __init__(self, arr: ndarray):
+        self.data: ndarray = arr
+        self.sfreq: float
+    
+    def zero_mean(self) -> 'Signals':
+        """Make the mean of the singal zero.
+
+        Returns:
+            self
+
+        """
+        self.data -= self.data.mean(axis=2, keepdims=True)
+        return self
+
+    def interpolate_spectrum(self, noise_freq: float, bandwidth: float) -> 'Signals':
+        """Interpolate spectrum of freuquency with noise.
+
+        Args:
+            arg1 (TODO): TODO
+
+        Returns:
+            self with noise spectrum of which interpolated
+
+        """
+        self.zero_mean()
+        sfreq = 1000.
+        freqdomain: FreqSignal = self.fourier_transform(sfreq=sfreq)
+        energy = freqsigal.compute_energy()
+        neighbor_energy: MeanEnergy = energy._
+
+        return self
+
+    def fourier_transform(self, sfreq: float) -> 'FreqSignal':
+        """(Discrete) fourier transform the signal into frequency domain.
+
+        Args:
+            sfreq: Sample frequency of the signal
+
+        Returns:
+            FreqSignal
+        """
+        return FreqSignal(fft(self.data), sfreq)
+
+
+class FreqSignal:
+    """A class for frequency domain signal data
+
+    Attributes:
+        data (ndarray): frequency data (N of trials, N of channels, N of frequencies)
+    """
+    def __init__(self, freqsignals: ndarray, sfreq: float):
+        """
+        Args:
+            freq_signals (ndarray): Frequency domain signal data
+            sfreq (float)    : Sample frequency
+        
+        """
+        self.data: ndarray = fft(signals.data)
+        sample_spacing: float = 1 / sfreq
+        self.freq: ndarray = rfftfreq(self.data.shape[2], sample_spacing)
+
+    def compute_energy(self) -> 'Energy':
+        """Compute energy of each unit(trial) in frequency domain.
+        Energy of a complex wave is square of the amplitude. Amplitude
+        is the absolute value of z, where z is a + bj, that represents
+        a wave in frequency(or time) domain.
+
+        Returns:
+            Energy
+        """
+        print('Computing energy of each unit(trial) in frequency domain')
+        return Energy(self)
+
+class Index:
+    """description"""
+    def __init__(self, indice: Tuple[int, int]):
+        self.min: int = indice[0]
+        self.max: int = indice[1]
+
+class MeanEnergy:
+    """description"""
+    def __init__(self, mean_energy: float, indice: Tuple[int, int]):
+        self.data: float
+        self.idx = Index(indice)
+        
+class Energy:
+    """description
+    Energy of a complex wave is square of the amplitude. Amplitude
+    is the absolute value of z, where z is a + bj, that represents
+    a wave in frequency(or time) domain.
+    """
+    def __init__(self, freqsignal: FreqSignal):
+        """
+        Args:
+            freqsignal (FreqSignal): Signal data in frequency domain
+            freq (ndarray)         : The Discrete Fourier Transform sample frequencies.
+        """
+        self.data: ndarray = np.square(abs(freqsignal.data)) 
+        self.freq: ndarray = freqsignal.freq
+
+    def _area_mean(self, area: Tuple[float, float]) -> 'MeanEnergy':
+        """TODO: Docstring for _area_mean.
+        Args:
+            area: (List[float, float]): Area of frequency, the mean of which you want to compute
+        Returns:
+            Instance of Energy: Mean energy of frequencies of the area
+        """
+        minidx: int = self._get_idx(area[0], self.freq)
+        maxidx: int = self._get_idx(area[1], self.freq)
+        mean_energy: ndarray = np.mean(self.data[:, :, minidx:maxidx], axis=2, keepdims=True)
+        return MeanEnergy(mean_energy, (minidx, maxidx)) 
+
+    def _neighbour_mean(self, noise_freq: float, bandwidth: float) -> 'MeanEnergy':
+        """TODO: Docstring for _neighbour_mean.
+
+        Args:
+            noise_freq (float): The frequency with noise that you want to interpolate
+            bandwidth (float): The width of frequencies you want to interpolate
+
+        Returns: 
+            neighbor_energy: MeanEnergy
+
+        """
+        low_neighbor: MeanEnergy = self._area_mean((noise_freq - bandwidth, noise_freq - bandwidth*0.5))
+        high_neighbor: MeanEnergy = self._area_mean((noise_freq + bandwidth*0.5, noise_freq + bandwidth))
+        true_mean = np.mean((low_neighbor.data, high_neighbor.data), axis=0)
+        arr = np.repeat(true_mean, high_neighbor.idx.min - low_neighbor.idx.max, axis=2)
+        return MeanEnergy(arr, (low_neighbor.idx.max, high_neighbor.idx.min))
+
+    def _interpolate(self, noise_freq: float, bandwidth: float) -> 'MeanEnergy':
+        """TODO: Docstring for _interpolate.
+
+        Args:
+            noise_freq (float): The frequency with noise that you want to interpolate
+            bandwidth (float): The width of frequencies you want to interpolate
+
+        Returns: TODO
+
+        """
+        
+        pass
+
+    def _get_idx(self, target_freq: float, freq: ndarray) -> int:
+        """Get the index of the closest frequency.
+        Args:
+            target_freq : float
+                Freqency, the index of which we are looking for.
+            freq : ndarray
+                1D array of frequencies.
+                This function looks for the index of target_freq in this array.
+        Returns:
+            idx (int)
+                The idx for target_freq in freq.
+        """
+        return int(np.abs(freq - target_freq).argmin())
+
+class Power:
+    """A class for total power
+    Attributes:
+        data: power (N of channels, N of data points)
+    """
+    def __init__(self, energy: Energy):
+        print('Computing total power...')
+        self.data = np.mean(energy.data, axis=0)
+        self.freq: ndarray = energy.freq
+
+        
+def trim_axs(axs, num):
+    """Massage the axs list to have correct legnth.
+    """
+    axs = axs.flat
+    for axi in axs[num:]:
+        axi.remove()
+    return axs[:num]
+
+
+
 def modify_ftarray(energy_ratio: ndarray, ftarray: ndarray,
                    lidx: int, hidx: int) -> ndarray:
     """Multiply frequency domain signal with the energy ratio.
@@ -201,46 +345,6 @@ def get_idx(target_freq: float, freq: ndarray) -> int:
         The idx for target_freq in freq.
     """
     return (np.abs(freq - target_freq)).argmin()
-
-
-def get_neighbor_idxs(noise_freq: float, band: float,
-                      freq: ndarray, edge=True):
-    """Get the indexes of neighboring frequencies.
-    parameters
-    ----------
-    noise_freq : int
-        frequency to be interpolated.
-    band : float
-        band width (Hz) to be included in the interpolation.
-    freq : ndarray
-        1D array of frequencies. np.linspace(0, Nft, n_dpoints/2 +1)
-    edge : bool
-        Default : True
-        If True, Indices of the border of higher & lower neighboring bands
-        will be returned. (llidx & hhidx)
-    """
-    if edge is not True:
-        hfreq: float = noise_freq + band*0.5
-        lfreq: float = noise_freq - band*0.5
-        hidx: int = get_idx(hfreq, freq)
-        lidx: int = get_idx(lfreq, freq)
-        return lidx, hidx
-    hfreq: float = noise_freq + band*0.5
-    lfreq: float = noise_freq - band*0.5
-    hhfreq: float = hfreq + band
-    llfreq: float = lfreq - band
-
-    hidx: int = get_idx(hfreq, freq)
-    lidx: int = get_idx(lfreq, freq)
-    hhidx: int = get_idx(hhfreq, freq)
-    llidx: int = get_idx(llfreq, freq)
-    return llidx, lidx, hidx, hhidx
-
-
-def mean_ene_of_range(freq1: int, freq2: int, energy: ndarray) -> ndarray:
-    """Compute the mean energy of a frequency range (freq1:freq2)
-    """
-    return np.mean(energy[:, :, freq1:freq2], axis=2, keepdims=True)
 
 
 def compute_neighbor_mean_ene(noise_freq: float,
