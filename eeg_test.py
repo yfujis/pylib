@@ -8,6 +8,8 @@ This describes the script.
 """
 from pathlib import Path
 
+import time
+
 from numpy import ndarray
 import numpy as np
 
@@ -15,6 +17,7 @@ from preprocessing.spectrum_interpolation import interpolate, plot
 
 
 if __name__ == '__main__':
+    start = time.time()
     base_path = Path('/Users/yukifujishima/Documents/eeg_example')
     fname = 'example_eeg.dat'
     fpath = str(base_path / fname)
@@ -57,3 +60,6 @@ if __name__ == '__main__':
     new_epo2 = new_epo2.reshape((n_chn*n_trials*n_points), order='F')
 
     new_epo2.tofile(fid, format='float32')
+    end = time.time()
+    elapsed_time = end - start
+    print(f"Elepsed time: {elapsed_time}s")
