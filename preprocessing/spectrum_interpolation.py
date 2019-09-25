@@ -12,11 +12,14 @@ Method developed by
 from typing import List, Tuple
 
 from functools import partial
+from functools import lru_cache
+
 from multiprocessing import Pool
 
 from numpy import ndarray
-from numpy.fft import fft, ifft, rfftfreq
 import numpy as np
+
+from scipy.fftpack import fft, ifft, rfftfreq
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -38,12 +41,18 @@ def interpolate(arr: ndarray, noise_freq: float,
         new_array (ndarray): The epochs array after spectrum interpolation
 
     """
+    # Zero meaning
     arr -= arr.mean(axis=2, keepdims=True)
+    # DFT
     freqdomain: ndarray = fft(arr)
+    # Get the frequency series
     sample_spacing: float = 1 / sfreq
     freqs: ndarray = rfftfreq(arr.shape[2], sample_spacing)
+
     interpo = partial(_interpolate, noise_freq=noise_freq,
                       bandwidth=bandwidth, freqs=freqs)
+    print('Interpolating ', noise_freq, 'Hz...')
+    # Apply spectrum interpolation.
     with Pool(processes=n_jobs) as pool:
         interpolated = np.array(list(map(lambda x: pool.map(interpo, x),
                                      freqdomain)))
@@ -65,8 +74,11 @@ def plot(arr: ndarray, sfreq: float, ch_names: List[str],
 
     """
     # Zero meaning
+    print('Zero meaning')
     arr -= arr.mean(axis=2, keepdims=True)
+
     # Compute Power
+    print('Computing total power...(no filter applied...)')
     power: ndarray = np.mean(np.square(abs(fft(arr))), axis=0)
 
     # Get frequencies
@@ -86,14 +98,17 @@ def plot(arr: ndarray, sfreq: float, ch_names: List[str],
     axs = _trim_axs(axs, n_chn)
     fminidx: int = _get_idx(fmin, freqs)
     fmaxidx: int = _get_idx(fmax, freqs)
+    print('Plotting...')
     for i in range(n_chn):
         axs[i].set_title(channels[i])
         axs[i].plot(freqs[fminidx:fmaxidx], power[i][fminidx:fmaxidx])
         axs[i].set_xscale('log')
         axs[i].set_xticks([fmin, 10, fmax])
+    print('Done.')
     return fig
 
 
+#@lru_cache(maxsize=128)
 def _interpolate(data: ndarray, noise_freq: float,
                  bandwidth: float, freqs: ndarray) -> ndarray:
     """Apply interpolation to one trial.

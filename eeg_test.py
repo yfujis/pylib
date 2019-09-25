@@ -30,7 +30,6 @@ if __name__ == '__main__':
     # The data used in this example has been saved by Matlab (colum-major).
     epo = epo.reshape((n_chn, n_points*n_trials), order='F')
     epo = epo.reshape((n_chn, n_points, n_trials), order='F')
-    print(epo.shape)
     epo = epo.swapaxes(1, 2).swapaxes(0, 1)
 
     new_epo: ndarray = interpolate(arr=epo, noise_freq=60,
