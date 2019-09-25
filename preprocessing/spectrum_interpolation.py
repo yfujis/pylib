@@ -16,9 +16,10 @@ from functools import partial
 from multiprocessing import Pool
 
 from numpy import ndarray
+from numpy.fft import rfftfreq
 import numpy as np
 
-from scipy.fftpack import fft, ifft, rfftfreq
+from scipy.fftpack import fft, ifft
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -100,9 +101,9 @@ def plot(arr: ndarray, sfreq: float, ch_names: List[str],
     print('Plotting...')
     for i in range(n_chn):
         axs[i].set_title(channels[i])
-        axs[i].plot(freqs[fminidx:fmaxidx], power[i][fminidx:fmaxidx])
-        axs[i].set_xscale('log')
-        axs[i].set_xticks([fmin, 10, fmax])
+        axs[i].plot(freqs[fminidx:fmaxidx], np.log10(power[i][fminidx:fmaxidx]))
+#       axs[i].set_xscale('log')
+        axs[i].set_xticks([fmin, 10, 60, fmax])
     print('Done.')
     return fig
 
