@@ -12,7 +12,6 @@ Method developed by
 from typing import List, Tuple
 
 from functools import partial
-from functools import lru_cache
 
 from multiprocessing import Pool
 
@@ -55,7 +54,7 @@ def interpolate(arr: ndarray, noise_freq: float,
     # Apply spectrum interpolation.
     with Pool(processes=n_jobs) as pool:
         interpolated = np.array(list(map(lambda x: pool.map(interpo, x),
-                                     freqdomain)))
+                                         freqdomain)))
     return ifft(interpolated)
 
 
@@ -108,7 +107,6 @@ def plot(arr: ndarray, sfreq: float, ch_names: List[str],
     return fig
 
 
-#@lru_cache(maxsize=128)
 def _interpolate(data: ndarray, noise_freq: float,
                  bandwidth: float, freqs: ndarray) -> ndarray:
     """Apply interpolation to one trial.
