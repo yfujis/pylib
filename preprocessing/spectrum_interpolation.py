@@ -53,10 +53,14 @@ def interpolate(arr: ndarray, noise_freq: float,
                       bandwidth=bandwidth, freqs=freqs)
     print('Interpolating ', noise_freq, 'Hz...')
     # Apply spectrum interpolation.
-    with Pool(processes=n_jobs) as pool:
-        interpolated = np.array(list(map(lambda x: pool.map(interpo, x),
-                                         freqdomain)))
-    return ifft(interpolated)
+    if n_jobs == 1:
+        new_arr = np.array(list(map(lambda y: list(map(interpo, y)),
+                                    freqdomain)))
+    elif n_jobs > 1:
+        with Pool(processes=n_jobs) as pool:
+            new_arr = np.array(list(map(lambda x: pool.map(interpo, x),
+                                        freqdomain)))
+    return ifft(new_arr)
 
 
 def plot(arr: ndarray, sfreq: float, ch_names: List[str],
