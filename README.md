@@ -9,5 +9,9 @@ Leske, S., & Dalal, S. S. (2019). Reducing power line noise in EEG and MEG data 
 
 spectrum_interpolation.py is the module file. Please check eeg_test.py & meg_test.py to get an idea of how to use it.
 
+## Stats
+### Permutation Cluster Test
+Maris, E., & Oostenveld, R. (2007). Nonparametric statistical testing of EEG- and MEG-data. Journal of Neuroscience Methods, 164(1), 177–190. https://doi.org/10.1016/J.JNEUMETH.2007.03.024
+
 Message me or shoort me an email (yfujishima1001@gmail.com) if you have any questions.
 Improvement tips would be so much appreciated. Thank you!
