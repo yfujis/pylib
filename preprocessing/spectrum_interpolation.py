@@ -60,7 +60,7 @@ def interpolate(arr: ndarray, noise_freq: float,
         with Pool(processes=n_jobs) as pool:
             new_arr = np.array(list(map(lambda x: pool.map(interpo, x),
                                         freqdomain)))
-    return ifft(new_arr)
+    return ifft(new_arr).real
 
 
 def plot(arr: ndarray, sfreq: float, ch_names: List[str],
