@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 """
-File: permutation.py
-Author: Yuki Fujishima
-Email: yfujishima1001@gmail.com
-Github: https://github.com/yukids123
-Description:
+Author: Yuki Fujishima <yfujishima1001@gmail.com>
+
+Method developed by
+    Maris, E., & Oostenveld, R. (2007)
+    Nonparametric statistical testing of EEG- and MEG-data.
+    Journal of Neuroscience Methods, 164(1), 177–190.
+    https://doi.org/10.1016/J.JNEUMETH.2007.03.024
+
 """ 
 
 import json
@@ -52,7 +55,6 @@ def cluster_pvals(clusters: List[Dict],
         maxstats (mdarray): The maximum sums of T-values from each permutation
     Returns:
         p_vals: ndarray
-
     """
     clus_stats = [cluster['sum_tval'] for cluster in clusters]
     p_vals = np.array([np.mean(abs(maxstats) >= abs(t)) for t in clus_stats])
