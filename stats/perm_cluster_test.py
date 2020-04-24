@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Author: Yuki Fujishima <yfujishima1001@gmail.com>
 
@@ -147,6 +147,7 @@ def find_maxstat(clusters: List[Dict]) -> float:
     """
     if len(clusters) == 0:
         return 0
+    # Absolute
     return np.max([abs(clus['sum_tval']) for clus in clusters])
 
 
