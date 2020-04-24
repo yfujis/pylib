@@ -148,7 +148,7 @@ def find_maxstat(clusters: List[Dict]) -> float:
     if len(clusters) == 0:
         return 0
     # Absolute
-    return np.max([abs(clus['sum_tval']) for clus in clusters])
+    return np.max(np.abs([clus['sum_tval'] for clus in clusters]))
 
 
 def maxstats_distribution(X: List[ndarray], threshold: float,
@@ -163,24 +163,22 @@ def maxstats_distribution(X: List[ndarray], threshold: float,
     """
     maxstats: List[float] = []
     # Permutate n_permutation - 1 times.
-#   bar = ProgressBar(
-#                     maxval=30,
-#                     widgets=[Bar('=', '[', ']'),
-#                              ' ',
-#                              Percentage()])
-#                          #   ' ',
-#                          #   ETA()])
-#   bar.start()
+    bar = ProgressBar(maxval=n_permutations-1,
+                      widgets=[Bar('=', '[', ']'),
+                               ' ',
+                               Percentage(),
+                               ' ',
+                               ETA()])
+    bar.start()
     for i in range(n_permutations - 1):
         # Shuffle the arrays.
         shuffled_X = _shuffle_arrays(X)
         # Find & make clusters. Get the MaxStat.
         _, clusters = make_clusters(shuffled_X, threshold)
         maxstats.append(find_maxstat(clusters))
-#     # if i % 1000 == 0:
-#       bar.update(i+1)
-#       sleep(0.1)
-#   bar.finish()
+        if i % 100 == 0:
+            bar.update(i + 1)
+    bar.finish()
     # Return MaxStats as ndarray
     return np.array(maxstats)
 
