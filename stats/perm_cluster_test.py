@@ -18,10 +18,79 @@ from time import sleep
 import numpy as np
 from numpy import ndarray
 import random
-from scipy.stats import ttest_ind
+from scipy.stats import ttest_ind, f_oneway
 
 from pathlib import Path
 from typing import List, Tuple, Dict
+
+
+class Cluster:
+
+    """Docstring for Cluster. """
+
+    def __init__(self, cluster: dict):
+        """TODO: to be defined. """
+        self.start = cluster['start']
+        self.stop = cluster['stop']
+        self.stats = cluster['sum_tval']
+
+
+def classical_perm_test(X: List[ndarray],
+                        n_permutations: int,
+                        test: str) -> Tuple[ndarray, List[Dict],
+                                            ndarray, ndarray]:
+    """Classical permutation test.
+    Args:
+        X (List[ndarray]): Each array in X should contain the observations
+                           for one group.
+        n_permutations (int): The number of permutations.
+        test (str): Test used to make clusters.
+                    't' for independent t-test, 'f' for one-way ANOVA
+
+    Returns:
+        t_val (ndarray): Array of T-values of each datapoint.
+        clusters (List[Dict]): Each content corresponds to a cluster.
+            Each dictionary has 'start', 'stop', 'sum_tval'.
+        pval (ndarray): Cluster p-values.
+        clustats (mdarray): The sum of T-values from each permutation
+
+    """
+    # Run t-test at each data point.
+    if test == 't':
+        t_val, _ = ttest_ind(X[0], X[1], axis=0)
+    elif test == 'f':
+        t_val, _ = f_oneway(X[0], X[1])
+    else:
+        raise ValueError('test has to be t or f.')
+    cluster = [{'start': 0, 'stop': -1, 'sum_tval': np.sum(t_val)}]
+    clustats: List[float] = []
+    # Permutate n_permutation - 1 times.
+    bar = ProgressBar(maxval=n_permutations-1,
+                      widgets=[Bar('=', '[', ']'),
+                               ' ',
+                               Percentage(),
+                               ' ',
+                               ETA()])
+    bar.start()
+    for i in range(n_permutations - 1):
+        # Shuffle the arrays.
+        shuffled_X = _shuffle_arrays(X)
+        # Find & make clusters. Get the MaxStat.
+        if test == 't':
+            t_ob, _ = ttest_ind(shuffled_X[0], shuffled_X[1], axis=0)
+        elif test == 'f':
+            t_ob, _ = f_oneway(shuffled_X[0], shuffled_X[1])
+        else:
+            raise ValueError('test has to be t or f.')
+        clustats.append(np.sum(t_ob))
+        if i % 100 == 0:
+            bar.update(i + 1)
+    bar.finish()
+    # Return MaxStats as ndarray
+    clustats = np.array(clustats)
+    pval = cluster_pvals(cluster, clustats)
+    cluster = [[Cluster(cluster[0])]]
+    return t_val, cluster, pval, clustats
 
 
 def cluster_perm_test(X: List[ndarray], threshold: float,
@@ -31,6 +100,8 @@ def cluster_perm_test(X: List[ndarray], threshold: float,
     Args:
         X (List[ndarray]): Each array in X should contain the observations
                            for one group.
+        threshold (float): Threshold with which clusters will be made.
+        n_permutations (int): The number of permutations.
     Returns:
         t_val (ndarray): Array of T-values of each datapoint.
         clusters (List[Dict]): Each content corresponds to a cluster.
@@ -80,7 +151,8 @@ def cluster_pvals(clusters: List[Dict],
 
 
 def make_clusters(X: List[ndarray],
-                  threshold: float = None) -> Tuple[ndarray, List[Dict]]:
+                  threshold: float,
+                  test: str) -> Tuple[ndarray, List[Dict]]:
     """Make clusters by t-test.
     Args:
         X (List[ndarray]): Each array in X should contain the observations
@@ -92,7 +164,13 @@ def make_clusters(X: List[ndarray],
             Each dictionary has 'start', 'stop', 'sum_tval'.
     """
     # Run t-test at each data point.
-    t_val, _ = ttest_ind(X[0], X[1], axis=0)
+    if test == 't':
+        t_val, _ = ttest_ind(X[0], X[1], axis=0)
+    elif test == 'f':
+        t_val, _ = f_oneway(X[0], X[1])
+    else:
+        raise ValueError('test has to be t or f.')
+
     # If two or more neighbouring t-values are above the threshold,
     # they make a cluster.
     return t_val, _make_clusters(t_val, threshold)
@@ -152,7 +230,8 @@ def find_maxstat(clusters: List[Dict]) -> float:
 
 
 def maxstats_distribution(X: List[ndarray], threshold: float,
-                          n_permutations: int) -> ndarray:
+                          n_permutations: int,
+                          test: str) -> ndarray:
     """Permutate over n_permutation - 1 times and make MaxStats distribution.
     Args:
         X (List[ndarray]): Each array in X should contain the observations
@@ -174,7 +253,7 @@ def maxstats_distribution(X: List[ndarray], threshold: float,
         # Shuffle the arrays.
         shuffled_X = _shuffle_arrays(X)
         # Find & make clusters. Get the MaxStat.
-        _, clusters = make_clusters(shuffled_X, threshold)
+        _, clusters = make_clusters(shuffled_X, threshold, test)
         maxstats.append(find_maxstat(clusters))
         if i % 100 == 0:
             bar.update(i + 1)
